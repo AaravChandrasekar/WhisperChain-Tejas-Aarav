@@ -42,3 +42,12 @@ def test_no_sender_info_stored():
     with tx() as db:
         assert db.execute("SELECT * FROM messages").fetchone().keys() == ["id", "recipient", "ciphertext", "flagged"]
 
+
+def test_audit_log_access_and_events():
+    assert client.get("/audit", headers=SENDER).status_code == 403
+    assert client.get("/audit", headers=ADMIN).status_code == 200
+    log = client.get("/audit", headers=MODERATOR).json()
+    assert log["chain_valid"]
+    actions = {e["action"] for e in log["entries"]}
+    assert {"credential_issued", "token_used", "message_sent", "token_rejected", "message_flagged"} <= actions
+    assert "ria" not in str(log) and "sol" not in str(log)  # no identities

@@ -42,6 +42,19 @@ CREATE TABLE IF NOT EXISTS messages (
     ciphertext TEXT NOT NULL,
     flagged    INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS audit_log (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts        TEXT NOT NULL,
+    action    TEXT NOT NULL,
+    role      TEXT NOT NULL,
+    prev_hash TEXT NOT NULL,
+    hash      TEXT NOT NULL
+);
+-- Append-only: the database itself rejects edits/deletes to the audit log.
+CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit_log
+    BEGIN SELECT RAISE(ABORT, 'audit log is append-only'); END;
+CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit_log
+    BEGIN SELECT RAISE(ABORT, 'audit log is append-only'); END;
 """
 
 

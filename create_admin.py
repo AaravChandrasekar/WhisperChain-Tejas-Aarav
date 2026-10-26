@@ -2,6 +2,7 @@
 import sys
 from getpass import getpass
 
+from app.audit import audit
 from app.auth import hash_pw, set_roles
 from app.db import init_db, tx
 
@@ -13,4 +14,5 @@ init_db()
 with tx() as db:
     db.execute("INSERT INTO users (username, pw_hash, status) VALUES (?, ?, 'active')", (username, hash_pw(password)))
     set_roles(db, username, {"admin"})
+    audit(db, "admin_bootstrapped", "admin")
 print(f"Admin '{username}' created.")

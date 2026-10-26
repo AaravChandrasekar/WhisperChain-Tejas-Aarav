@@ -1,6 +1,6 @@
 # WhisperChain+
 
-Anonymous compliment platform with role-based access control (FastAPI + SQLite).
+Anonymous compliment platform with RBAC and audit logging (FastAPI + SQLite).
 
 ## Setup
 ```bash
@@ -31,5 +31,11 @@ Admins can also `PUT /admin/users/{u}/roles` and `POST /admin/users/{u}/revoke`.
 | `GET /inbox` | Recipient | Own messages only |
 | `POST /messages/{id}/flag` | Recipient | Own messages only |
 | `GET /moderation/flagged` | Moderator | Flagged messages only |
+| `GET /audit` | Moderator, Admin (read-only) | Role-level events + hash-chain check |
 
 Admins have no endpoint that returns messages, and no sender info is stored anywhere to leak.
+
+## Audit logging
+Every key action appends an entry with a timestamp, action and role — never a username. Each entry includes the hash of the previous one, so editing any past entry breaks the chain (`GET /audit` reports `chain_valid`), and SQLite triggers reject any `UPDATE` or `DELETE` on the log.
+
+Events: `admin_bootstrapped`, `registration_requested`, `user_approved`, `roles_changed`, `user_revoked`, `round_opened`, `round_closed`, `credential_issued`, `token_used`, `token_rejected`, `message_sent`, `message_flagged`.

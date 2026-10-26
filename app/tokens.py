@@ -14,6 +14,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from .audit import audit
 from .auth import require
 from .blind import load_server_key, sign_blinded, verify
 from .db import tx
@@ -56,6 +57,7 @@ def start_round(_: dict = Depends(require("admin"))):
     with tx() as db:
         db.execute("UPDATE rounds SET closed_at = ? WHERE closed_at IS NULL", (now(),))
         rid = db.execute("INSERT INTO rounds (opened_at) VALUES (?)", (now(),)).lastrowid
+        audit(db, "round_opened", "admin")
     return {"round": rid}
 
 
@@ -64,6 +66,7 @@ def end_round(_: dict = Depends(require("admin"))):
     with tx() as db:
         rid = open_round(db)
         db.execute("UPDATE rounds SET closed_at = ? WHERE id = ?", (now(), rid))
+        audit(db, "round_closed", "admin")
     return {"round": rid, "status": "closed"}
 
 
@@ -91,6 +94,7 @@ def issue_credential(body: BlindIn, user: dict = Depends(require("sender"))):
             db.execute("INSERT INTO credentials_issued VALUES (?)", (user["username"],))
         except sqlite3.IntegrityError:
             raise HTTPException(409, "Credential already issued")
+        audit(db, "credential_issued", "sender")
     return {"blind_signature": format(sign_blinded(blinded, D, N), "x")}
 
 
@@ -108,3 +112,4 @@ def redeem_token(db, t: TokenIn):
         db.execute("INSERT INTO spent_tokens VALUES (?, ?)", (hashlib.sha256(pub).hexdigest(), rid))
     except sqlite3.IntegrityError:
         raise HTTPException(409, "Token already used this round")
+    audit(db, "token_used", "sender")
