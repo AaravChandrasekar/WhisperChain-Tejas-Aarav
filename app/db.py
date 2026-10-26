@@ -35,6 +35,13 @@ CREATE TABLE IF NOT EXISTS spent_tokens (
     round_id       INTEGER NOT NULL REFERENCES rounds(id),
     PRIMARY KEY (pseudonym_hash, round_id)
 );
+-- No sender, no timestamp, random id: nothing here points back to who sent it.
+CREATE TABLE IF NOT EXISTS messages (
+    id         TEXT PRIMARY KEY,
+    recipient  TEXT NOT NULL REFERENCES users(username),
+    ciphertext TEXT NOT NULL,
+    flagged    INTEGER NOT NULL DEFAULT 0
+);
 """
 
 

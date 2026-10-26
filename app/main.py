@@ -5,11 +5,13 @@ from pydantic import BaseModel, Field
 
 from .auth import DUMMY_HASH, check_pw, current_user, hash_pw, new_session, require, set_roles, validate_roles
 from .db import init_db, tx
+from .messages import router as messages_router
 from .tokens import router as tokens_router
 
 init_db()
 app = FastAPI(title="WhisperChain+")
 app.include_router(tokens_router)
+app.include_router(messages_router)
 
 
 class RegisterIn(BaseModel):
