@@ -20,6 +20,21 @@ CREATE TABLE IF NOT EXISTS sessions (
     username   TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,
     expires_at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS rounds (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    opened_at TEXT NOT NULL,
+    closed_at TEXT
+);
+-- Records only THAT a user got a credential, never the (blinded) pseudonym itself.
+CREATE TABLE IF NOT EXISTS credentials_issued (
+    username TEXT PRIMARY KEY REFERENCES users(username)
+);
+-- One row per pseudonym per round. Identity-free: pseudonyms can't be linked to users.
+CREATE TABLE IF NOT EXISTS spent_tokens (
+    pseudonym_hash TEXT NOT NULL,
+    round_id       INTEGER NOT NULL REFERENCES rounds(id),
+    PRIMARY KEY (pseudonym_hash, round_id)
+);
 """
 
 
