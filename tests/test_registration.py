@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 
+from app.audit import verify_chain
+from app.db import tx
 from app.main import app
 
 client = TestClient(app)
@@ -41,3 +43,14 @@ def test_revoke_kills_sessions():
     client.post("/admin/users/sam/revoke", headers=admin)
     assert client.get("/me", headers=sam).status_code == 401
 
+
+def test_audit_log_is_append_only_and_chained():
+    with tx() as db:
+        assert verify_chain(db)
+        rows = db.execute("SELECT action, role FROM audit_log").fetchall()
+        assert all("alex" not in tuple(r) for r in rows)  # no identities logged
+        try:
+            db.execute("DELETE FROM audit_log")
+            assert False
+        except Exception as e:
+            assert "append-only" in str(e)

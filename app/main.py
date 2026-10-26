@@ -3,6 +3,7 @@ import sqlite3
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from .audit import audit
 from .auth import DUMMY_HASH, check_pw, current_user, hash_pw, new_session, require, set_roles, validate_roles
 from .db import init_db, tx
 from .messages import router as messages_router
@@ -45,6 +46,7 @@ def register(body: RegisterIn):
         except sqlite3.IntegrityError:
             raise HTTPException(409, "Username taken")
         set_roles(db, body.username, body.roles)
+        audit(db, "registration_requested", ",".join(sorted(body.roles)))
     return {"username": body.username, "status": "pending"}
 
 
@@ -91,6 +93,7 @@ def approve(username: str, body: RolesIn | None = None, _: dict = Depends(requir
             validate_roles(body.roles)
             set_roles(db, username, body.roles)
         db.execute("UPDATE users SET status = 'active' WHERE username = ?", (username,))
+        audit(db, "user_approved", "admin")
     return {"username": username, "status": "active"}
 
 
@@ -100,6 +103,7 @@ def assign_roles(username: str, body: RolesIn, _: dict = Depends(require("admin"
     with tx() as db:
         _get_user(db, username)
         set_roles(db, username, body.roles)
+        audit(db, "roles_changed", "admin")
     return {"username": username, "roles": sorted(body.roles)}
 
 
@@ -109,4 +113,5 @@ def revoke(username: str, _: dict = Depends(require("admin"))):
         _get_user(db, username)
         db.execute("UPDATE users SET status = 'revoked' WHERE username = ?", (username,))
         db.execute("DELETE FROM sessions WHERE username = ?", (username,))
+        audit(db, "user_revoked", "admin")
     return {"username": username, "status": "revoked"}
