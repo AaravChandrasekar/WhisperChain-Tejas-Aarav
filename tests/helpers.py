@@ -1,11 +1,12 @@
 """Shared test helpers, including the client side of the blind-signature flow."""
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fastapi.testclient import TestClient
-
+import whisper_crypto as wc
 from app.blind import blind, unblind
 from app.main import app
 
 client = TestClient(app)
+KEYS = {}  # username -> private key; stands in for each user's own device
 
 
 def login(username, password="password1"):
@@ -17,7 +18,9 @@ ADMIN = login("root", "rootpass1")
 
 
 def new_user(username, roles):
-    client.post("/register", json={"username": username, "password": "password1", "roles": roles})
+    KEYS[username] = wc.generate_keys()
+    client.post("/register", json={"username": username, "password": "password1", "roles": roles,
+                                  "public_key": wc.public_pem(KEYS[username])})
     client.post(f"/admin/users/{username}/approve", headers=ADMIN)
     return login(username)
 

@@ -2,6 +2,7 @@ import sqlite3
 
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field
+from whisper_crypto import load_public_key
 
 from .audit import audit
 from .auth import DUMMY_HASH, check_pw, current_user, hash_pw, new_session, require, set_roles, validate_roles
@@ -19,8 +20,7 @@ class RegisterIn(BaseModel):
     username: str = Field(pattern=r"^[A-Za-z0-9_.-]{3,32}$")
     password: str = Field(min_length=8, max_length=128)
     roles: set[str]
-    public_key: str | None = None  # PEM, generated client-side (Week 3)
-
+    public_key: str = Field(max_length=4096)  # RSA public key (PEM), generated on the user's device
 
 class LoginIn(BaseModel):
     username: str
@@ -37,6 +37,10 @@ def register(body: RegisterIn):
     validate_roles(body.roles)
     if "admin" in body.roles:
         raise HTTPException(403, "Admin accounts cannot be self-requested")
+    try:
+        load_public_key(body.public_key)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
     with tx() as db:
         try:
             db.execute(
@@ -47,6 +51,7 @@ def register(body: RegisterIn):
             raise HTTPException(409, "Username taken")
         set_roles(db, body.username, body.roles)
         audit(db, "registration_requested", ",".join(sorted(body.roles)))
+        audit(db, "key_registered", ",".join(sorted(body.roles)))
     return {"username": body.username, "status": "pending"}
 
 
