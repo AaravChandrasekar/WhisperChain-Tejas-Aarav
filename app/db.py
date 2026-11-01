@@ -30,18 +30,22 @@ CREATE TABLE IF NOT EXISTS credentials_issued (
     username TEXT PRIMARY KEY REFERENCES users(username)
 );
 -- One row per pseudonym per round. Identity-free: pseudonyms can't be linked to users.
+-- WITHOUT ROWID (here and on messages): rows are stored by key, not in insert order, so a spent
+-- token can't be matched to the message written in the same transaction.
 CREATE TABLE IF NOT EXISTS spent_tokens (
     pseudonym_hash TEXT NOT NULL,
     round_id       INTEGER NOT NULL REFERENCES rounds(id),
     PRIMARY KEY (pseudonym_hash, round_id)
-);
+) WITHOUT ROWID;
 -- No sender, no timestamp, random id: nothing here points back to who sent it.
+-- ciphertext is a whisper_crypto envelope; only the recipient's private key opens it.
 CREATE TABLE IF NOT EXISTS messages (
     id         TEXT PRIMARY KEY,
     recipient  TEXT NOT NULL REFERENCES users(username),
     ciphertext TEXT NOT NULL,
-    flagged    INTEGER NOT NULL DEFAULT 0
-);
+    flagged    INTEGER NOT NULL DEFAULT 0,
+    delivered  INTEGER NOT NULL DEFAULT 0
+) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS audit_log (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     ts        TEXT NOT NULL,
