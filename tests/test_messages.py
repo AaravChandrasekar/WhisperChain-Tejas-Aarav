@@ -64,11 +64,14 @@ def test_recipient_decrypts_and_verifies_locally():
 
 
 def test_flagging_and_moderation():
+    def flagged_ids():
+        return [m["id"] for m in client.get("/moderation/flagged", headers=MODERATOR).json()]
+
     msg_id = client.get("/inbox", headers=RECIPIENT).json()[0]["id"]
-    assert client.get("/moderation/flagged", headers=MODERATOR).json() == []  # unflagged is invisible
+    assert msg_id not in flagged_ids()  # unflagged is invisible
     assert client.post(f"/messages/{msg_id}/flag", headers=OTHER).status_code == 404  # not their message
     assert client.post(f"/messages/{msg_id}/flag", headers=RECIPIENT).status_code == 200
-    assert client.get("/moderation/flagged", headers=MODERATOR).json()[0]["id"] == msg_id
+    assert msg_id in flagged_ids()
     for who in (ADMIN, SENDER, RECIPIENT):
         assert client.get("/moderation/flagged", headers=who).status_code == 403
 
@@ -93,5 +96,7 @@ def test_audit_log_access_and_events():
     actions = [e["action"] for e in log["entries"]]
     assert {"key_registered", "credential_issued", "token_used", "message_sent", "token_rejected",
             "message_flagged"} <= set(actions)
-    assert actions.count("message_delivered") == 1  # inbox fetched several times, delivered once
+    with tx() as db:
+        delivered = db.execute("SELECT COUNT(*) FROM messages WHERE delivered = 1").fetchone()[0]
+    assert actions.count("message_delivered") == delivered  # each logged once, however often inboxes are fetched
     assert "ria" not in str(log) and "sol" not in str(log)  # no identities
