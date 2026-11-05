@@ -99,7 +99,7 @@ def test_flag_and_audit():
     assert f"[{msg_id}] [flagged]" in ok("cara", "inbox")
     assert "Already flagged" in run("cara", "flag", msg_id)[1]
     out = ok("root", "audit")
-    assert "Hash chain valid: True" in out and "message_flagged" in out
+    assert "Hash chain and signatures valid: True" in out and "message_flagged" in out
     assert "cara" not in out and "cole" not in out
 
 

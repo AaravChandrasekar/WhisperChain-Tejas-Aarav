@@ -77,6 +77,7 @@ def flagged(user: dict = Depends(require("moderator"))):
     """The moderator queue: open flags only, each as the report sealed for this moderator.
     `recipient` is who flagged it: their name is bound into the encryption and the sender's signature."""
     with tx() as db:
+        audit(db, "flags_reviewed", "moderator")
         rows = db.execute("SELECT f.message_id, m.recipient, f.reports FROM flags f "
                           "JOIN messages m ON m.id = f.message_id WHERE f.status = 'open'").fetchall()
     return [{"id": r["message_id"], "recipient": r["recipient"],

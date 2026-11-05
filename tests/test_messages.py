@@ -137,7 +137,7 @@ def test_audit_log_access_and_events():
     assert log["chain_valid"]
     actions = [e["action"] for e in log["entries"]]
     assert {"key_registered", "credential_issued", "token_used", "message_sent", "token_rejected",
-            "message_flagged"} <= set(actions)
+            "message_flagged", "flags_reviewed", "audit_viewed"} <= set(actions)
     with tx() as db:
         delivered = db.execute("SELECT COUNT(*) FROM messages WHERE delivered = 1").fetchone()[0]
     assert actions.count("message_delivered") == delivered  # each logged once, however often inboxes are fetched

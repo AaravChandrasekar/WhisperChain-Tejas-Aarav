@@ -38,6 +38,10 @@ def set_roles(db, username: str, roles: set[str]):
     db.executemany("INSERT INTO user_roles VALUES (?, ?)", [(username, r) for r in roles])
 
 
+def roles_of(db, username: str) -> set[str]:
+    return {r["role"] for r in db.execute("SELECT role FROM user_roles WHERE username = ?", (username,))}
+
+
 def new_session(db, username: str) -> str:
     token = secrets.token_urlsafe(32)
     db.execute(
@@ -57,7 +61,7 @@ def current_user(authorization: str = Header()) -> dict:
         ).fetchone()
         if not row:
             raise HTTPException(401, "Invalid or expired session")
-        roles = {r["role"] for r in db.execute("SELECT role FROM user_roles WHERE username = ?", (row["username"],))}
+        roles = roles_of(db, row["username"])
     return {"username": row["username"], "roles": roles}
 
 

@@ -280,7 +280,7 @@ def cmd_open_round(user: str):
 
 def cmd_audit(user: str):
     log = call("GET", "/audit", user=user)
-    print(f"Hash chain valid: {log['chain_valid']}")
+    print(f"Hash chain and signatures valid: {log['chain_valid']}")
     for e in log["entries"]:
         print(f"{e['id']:>4}  {e['ts']}  {e['action']:<22} {e['role']}")
 

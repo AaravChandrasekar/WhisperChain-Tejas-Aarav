@@ -81,11 +81,16 @@ The dashboard verifies each report's credential and signature, so fake reports s
 | `POST /messages/{id}/flag` | Recipient | Own messages only, once each |
 | `GET /moderation/flagged` | Moderator | Open flags only, as reports sealed for that moderator |
 | `POST /moderation/flags/{id}/dismiss`, `/freeze` | Moderator | Open flags only |
-| `GET /audit` | Moderator, Admin (read-only) | Role-level events + hash-chain check |
+| `GET /audit` | Moderator, Admin (read-only) | Role-level events + chain and signature check |
 
 Admins have no endpoint that returns messages, and no sender info is stored anywhere to leak.
 
 ## Audit logging
-Every key action appends an entry with a timestamp, action and role — never a username. Each entry includes the hash of the previous one, so editing any past entry breaks the chain (`GET /audit` reports `chain_valid`), and SQLite triggers reject any `UPDATE` or `DELETE` on the log.
+Every major action appends an entry with a timestamp, action and role, never a username. The log is tamper-resistant in three layers:
+1. **Append-only:** SQLite triggers reject any `UPDATE` or `DELETE` on the log.
+2. **Hash-chained:** each entry includes the hash of the previous one, so editing a past entry breaks every hash after it.
+3. **Signed:** the system's Ed25519 audit key (`audit_key.pem`, or `WC_AUDIT_KEY`) signs each entry's hash, so someone who can write to the database still can't recompute a valid chain without the key file.
 
-Events: `admin_bootstrapped`, `registration_requested`, `key_registered`, `user_approved`, `roles_changed`, `user_revoked`, `round_opened`, `round_closed`, `credential_issued`, `token_used`, `token_rejected`, `message_sent`, `message_delivered`, `message_flagged`, `flag_dismissed`, `token_frozen`, `alert_flag_threshold`, `alert_freeze_threshold`.
+`GET /audit` reports `chain_valid` (links and signatures), and viewing the log is itself logged.
+
+Events: `admin_bootstrapped`, `registration_requested`, `key_registered`, `user_approved`, `roles_changed`, `user_revoked`, `login`, `login_failed`, `round_opened`, `round_closed`, `credential_issued`, `token_used`, `token_rejected`, `message_sent`, `message_delivered`, `message_flagged`, `flags_reviewed`, `flag_dismissed`, `token_frozen`, `alert_flag_threshold`, `alert_freeze_threshold`, `audit_viewed`.

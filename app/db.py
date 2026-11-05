@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS audit_log (
     action    TEXT NOT NULL,
     role      TEXT NOT NULL,
     prev_hash TEXT NOT NULL,
-    hash      TEXT NOT NULL
+    hash      TEXT NOT NULL,
+    sig       TEXT NOT NULL  -- Ed25519 signature over hash by the system audit key
 );
 -- Append-only: the database itself rejects edits/deletes to the audit log.
 CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit_log

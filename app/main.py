@@ -5,7 +5,8 @@ from pydantic import BaseModel, Field
 from whisper_crypto import load_public_key
 
 from .audit import audit
-from .auth import DUMMY_HASH, check_pw, current_user, hash_pw, new_session, require, set_roles, validate_roles
+from .auth import (DUMMY_HASH, check_pw, current_user, hash_pw, new_session, require, roles_of, set_roles,
+                   validate_roles)
 from .db import init_db, tx
 from .messages import router as messages_router
 from .moderation import router as moderation_router
@@ -61,9 +62,15 @@ def register(body: RegisterIn):
 def login(body: LoginIn):
     with tx() as db:
         row = db.execute("SELECT pw_hash, status FROM users WHERE username = ?", (body.username,)).fetchone()
-        if not check_pw(body.password, row["pw_hash"] if row else DUMMY_HASH) or row["status"] != "active":
-            raise HTTPException(401, "Invalid credentials or account not active")
-        return {"token": new_session(db, body.username)}
+        valid = check_pw(body.password, row["pw_hash"] if row else DUMMY_HASH)  # always run, so timing leaks nothing
+        token = new_session(db, body.username) if valid and row and row["status"] == "active" else None
+        if token:
+            audit(db, "login", ",".join(sorted(roles_of(db, body.username))))
+        else:
+            audit(db, "login_failed", "unknown")
+    if not token:  # raised after the transaction commits, so the failed attempt stays logged
+        raise HTTPException(401, "Invalid credentials or account not active")
+    return {"token": token}
 
 
 @app.get("/me")

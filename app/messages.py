@@ -77,8 +77,9 @@ def inbox(user: dict = Depends(require("recipient"))):
 
 
 @router.get("/audit")
-def audit_log(_: dict = Depends(require("moderator", "admin"))):
-    """Read-only view of role-level events (no identities, no message content)."""
+def audit_log(user: dict = Depends(require("moderator", "admin"))):
+    """Read-only view of role-level events (no identities, no message content). Viewing is logged too."""
     with tx() as db:
+        audit(db, "audit_viewed", ",".join(sorted(user["roles"] & {"moderator", "admin"})))
         rows = db.execute("SELECT id, ts, action, role FROM audit_log ORDER BY id").fetchall()
         return {"chain_valid": verify_chain(db), "entries": [dict(r) for r in rows]}
