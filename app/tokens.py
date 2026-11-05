@@ -99,7 +99,7 @@ def issue_credential(body: BlindIn, user: dict = Depends(require("sender"))):
 
 
 def redeem_token(db, t: TokenIn):
-    """Accept a token once per pseudonym per round. Raises HTTPException if invalid."""
+    """Accept a token once per pseudonym per round, unless frozen. Raises HTTPException if invalid."""
     rid = open_round(db)
     pub = bytes.fromhex(t.pseudonym)
     if not verify(pub, int(t.credential, 16), N, E):
@@ -108,8 +108,11 @@ def redeem_token(db, t: TokenIn):
         Ed25519PublicKey.from_public_bytes(pub).verify(bytes.fromhex(t.round_sig), f"round:{rid}".encode())
     except (InvalidSignature, ValueError):
         raise HTTPException(403, "Invalid round signature")
+    pseudonym_hash = hashlib.sha256(pub).hexdigest()
+    if db.execute("SELECT 1 FROM frozen_pseudonyms WHERE pseudonym_hash = ?", (pseudonym_hash,)).fetchone():
+        raise HTTPException(403, "Token frozen by a moderator")
     try:
-        db.execute("INSERT INTO spent_tokens VALUES (?, ?)", (hashlib.sha256(pub).hexdigest(), rid))
+        db.execute("INSERT INTO spent_tokens VALUES (?, ?)", (pseudonym_hash, rid))
     except sqlite3.IntegrityError:
         raise HTTPException(409, "Token already used this round")
     audit(db, "token_used", "sender")

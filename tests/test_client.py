@@ -54,6 +54,7 @@ ok("root", "approve", "mia")
 ok("root", "open-round")
 ok("cara", "login")
 ok("cole", "login")
+ok("mia", "login")
 ok("cole", "credential")
 
 
@@ -100,6 +101,21 @@ def test_flag_and_audit():
     out = ok("root", "audit")
     assert "Hash chain valid: True" in out and "message_flagged" in out
     assert "cara" not in out and "cole" not in out
+
+
+def test_moderator_dashboard_dismiss_and_freeze():
+    msg_id = next(line.split("]")[0][1:] for line in ok("cara", "inbox").splitlines()
+                  if "verified anonymous sender" in line)
+    ok("cara", "flag", "planted")
+    out = ok("mia", "dashboard")
+    assert "Open flags: 2" in out and TEXT in out and "[planted] unverifiable" in out
+    assert "failed verification" in run("mia", "freeze", "planted")[1]  # a fake report can't freeze anyone
+    ok("mia", "dismiss", "planted")
+    assert "Froze" in ok("mia", "freeze", msg_id)
+    assert "Open flags: 0" in ok("mia", "dashboard")
+    ok("root", "open-round")
+    assert "frozen by a moderator" in run("cole", "send", "cara", "hello again")[1]
+    assert run("cara", "dashboard")[0] == 1  # moderators only
 
 
 def test_wrong_password_and_missing_setup():

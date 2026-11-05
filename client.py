@@ -15,6 +15,7 @@ import getpass
 import json
 import os
 import sys
+from collections import Counter
 from pathlib import Path
 
 import httpx
@@ -207,6 +208,59 @@ def cmd_flag(user: str, message_id: str):
     print(f"Flagged {message_id} for moderators.")
 
 
+def open_report(flag: dict, key, pk: dict) -> dict:
+    """Moderators: decrypt a flag report and check it's a genuine message to whoever flagged it."""
+    if not flag["report"]:
+        raise wc.InvalidMessage("not sealed for you (flagged before you became a moderator)")
+    inner = wc.unseal(flag["report"], key, flag["recipient"])
+    wc.verify_inner(inner, flag["recipient"], int(pk["n"], 16), pk["e"])
+    return inner
+
+
+def cmd_dashboard(user: str):
+    """Moderators: the open flag queue, decrypted and verified locally, then any alerts."""
+    _, key = unlock(user)
+    pk = call("GET", "/tokens/public-key")
+    reports = {}
+    for f in call("GET", "/moderation/flagged", user=user):
+        try:
+            reports[f["id"]] = open_report(f, key, pk)
+        except wc.InvalidMessage as exc:
+            reports[f["id"]] = exc
+    per_sender = Counter(r["pseudonym"] for r in reports.values() if isinstance(r, dict))
+    print(f"Open flags: {len(reports)}")
+    for msg_id, r in reports.items():
+        if isinstance(r, wc.InvalidMessage):
+            print(f"[{msg_id}] unverifiable, consider dismissing: {r}")
+            continue
+        count = per_sender[r["pseudonym"]]  # many flags on one pseudonym suggests a repeat abuser
+        print(f"[{msg_id}] round {r['round']}, anonymous sender {r['pseudonym'][:16]} ({count} open flags):")
+        print(f"    {r['text']}")
+    alerts = [e for e in call("GET", "/audit", user=user)["entries"] if e["action"].startswith("alert_")]
+    print(f"Alerts: {len(alerts)}")
+    for e in alerts:
+        print(f"  {e['ts']}  {e['action']}")
+
+
+def cmd_dismiss(user: str, message_id: str):
+    call("POST", f"/moderation/flags/{message_id}/dismiss", user=user)
+    print(f"Dismissed the flag on {message_id}.")
+
+
+def cmd_freeze(user: str, message_id: str):
+    """Freeze the sender of a flagged message. Only a verified report gives up its pseudonym."""
+    _, key = unlock(user)
+    flag = next((f for f in call("GET", "/moderation/flagged", user=user) if f["id"] == message_id), None)
+    if not flag:
+        raise ClientError(f"No open flag on {message_id}")
+    try:
+        inner = open_report(flag, key, call("GET", "/tokens/public-key"))
+    except wc.InvalidMessage as exc:
+        raise ClientError(f"Report failed verification ({exc}); dismiss it instead") from None
+    call("POST", f"/moderation/flags/{message_id}/freeze", user=user, json={"pseudonym": inner["pseudonym"]})
+    print(f"Froze the anonymous sender of {message_id}; their future tokens will be refused.")
+
+
 def cmd_pending(user: str):
     rows = call("GET", "/admin/pending", user=user)
     for p in rows:
@@ -246,6 +300,9 @@ def main(argv=None) -> int:
     s.add_argument("text")
     sub.add_parser("inbox", help="recipients: decrypt and show your messages")
     sub.add_parser("flag", help="recipients: flag an abusive message").add_argument("message_id")
+    sub.add_parser("dashboard", help="moderators: review open flags and alerts")
+    sub.add_parser("dismiss", help="moderators: dismiss a flag").add_argument("message_id")
+    sub.add_parser("freeze", help="moderators: freeze a flagged message's sender").add_argument("message_id")
     sub.add_parser("pending", help="admin: list accounts waiting for approval")
     sub.add_parser("approve", help="admin: approve an account").add_argument("username")
     sub.add_parser("open-round", help="admin: close the current round and open a new one")
@@ -261,6 +318,9 @@ def main(argv=None) -> int:
         "send": lambda: cmd_send(args.user, args.recipient, args.text),
         "inbox": lambda: cmd_inbox(args.user),
         "flag": lambda: cmd_flag(args.user, args.message_id),
+        "dashboard": lambda: cmd_dashboard(args.user),
+        "dismiss": lambda: cmd_dismiss(args.user, args.message_id),
+        "freeze": lambda: cmd_freeze(args.user, args.message_id),
         "pending": lambda: cmd_pending(args.user),
         "approve": lambda: cmd_approve(args.user, args.username),
         "open-round": lambda: cmd_open_round(args.user),

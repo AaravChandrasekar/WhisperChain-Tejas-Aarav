@@ -4,6 +4,7 @@ import pytest
 from helpers import ADMIN, KEYS, client, get_credential, make_token, new_user
 
 import whisper_crypto as wc
+from app import moderation
 from app.db import tx
 
 RECIPIENT = new_user("ria", ["recipient"])
@@ -70,10 +71,16 @@ def report_for_moderators(msg):
                         for m in client.get("/moderation/keys", headers=RECIPIENT).json()}}
 
 
-def test_flagging_and_moderation():
-    def flagged():
-        return {f["id"]: f for f in client.get("/moderation/flagged", headers=MODERATOR).json()}
+def flagged():
+    return {f["id"]: f for f in client.get("/moderation/flagged", headers=MODERATOR).json()}
 
+
+def audit_actions():
+    return [e["action"] for e in client.get("/audit", headers=MODERATOR).json()["entries"]]
+
+
+def test_flagging_and_moderation(monkeypatch):
+    monkeypatch.setattr(moderation, "FLAG_ALERT", len(flagged()) + 1)  # this flag crosses the threshold
     msg = client.get("/inbox", headers=RECIPIENT).json()[0]
     body = report_for_moderators(msg)
     assert msg["id"] not in flagged()  # unflagged is invisible
@@ -93,6 +100,22 @@ def test_flagging_and_moderation():
     for who in (ADMIN, SENDER, RECIPIENT):
         assert client.get("/moderation/flagged", headers=who).status_code == 403
     assert client.get("/moderation/keys", headers=ADMIN).status_code == 403
+    assert "alert_flag_threshold" in audit_actions()
+
+
+def test_freeze_blocks_sender(monkeypatch):
+    with tx() as db:
+        frozen = db.execute("SELECT COUNT(*) FROM frozen_pseudonyms").fetchone()[0]
+    monkeypatch.setattr(moderation, "FREEZE_ALERT", frozen + 1)  # this freeze crosses the threshold
+    msg_id = client.get("/inbox", headers=RECIPIENT).json()[0]["id"]
+    body = {"pseudonym": CRED[1].hex()}  # what the moderator read from the verified report
+    assert client.post(f"/moderation/flags/{msg_id}/freeze", headers=ADMIN, json=body).status_code == 403
+    assert client.post(f"/moderation/flags/{msg_id}/freeze", headers=MODERATOR, json=body).status_code == 200
+    assert msg_id not in flagged()  # resolved, so out of the queue
+    assert client.post(f"/moderation/flags/{msg_id}/dismiss", headers=MODERATOR).status_code == 404
+    rid = client.post("/admin/rounds/open", headers=ADMIN).json()["round"]
+    assert send(make_token(*CRED, rid), envelope(rid)).status_code == 403  # frozen, even in a new round
+    assert {"token_frozen", "alert_freeze_threshold"} <= set(audit_actions())
 
 
 def test_no_sender_info_stored():

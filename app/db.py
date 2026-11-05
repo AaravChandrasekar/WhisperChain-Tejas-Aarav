@@ -48,7 +48,13 @@ CREATE TABLE IF NOT EXISTS messages (
 -- A recipient's report on a message: JSON {moderator: envelope}, readable only by moderators.
 CREATE TABLE IF NOT EXISTS flags (
     message_id TEXT PRIMARY KEY REFERENCES messages(id),
-    reports    TEXT NOT NULL
+    reports    TEXT NOT NULL,
+    status     TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'dismissed', 'frozen'))
+);
+-- Pseudonyms frozen by a moderator; their tokens are refused. Still not linkable to a user.
+CREATE TABLE IF NOT EXISTS frozen_pseudonyms (
+    pseudonym_hash TEXT PRIMARY KEY,
+    frozen_at      TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS audit_log (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,

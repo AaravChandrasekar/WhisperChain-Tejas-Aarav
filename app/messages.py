@@ -51,7 +51,7 @@ def send_message(body: MessageIn):
     try:
         with tx() as db:
             redeem_token(db, body.token)
-            msg_id = secrets.token_urlsafe(16)
+            msg_id = secrets.token_hex(16)  # hex, so an id never starts with "-" and looks like a CLI flag
             db.execute("INSERT INTO messages (id, recipient, ciphertext) VALUES (?, ?, ?)",
                        (msg_id, body.recipient, body.ciphertext))
             audit(db, "message_sent", "sender")
