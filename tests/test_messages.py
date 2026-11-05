@@ -63,23 +63,42 @@ def test_recipient_decrypts_and_verifies_locally():
         wc.unseal(msg["ciphertext"], KEYS["omar"], "omar")
 
 
-def test_flagging_and_moderation():
-    def flagged_ids():
-        return [m["id"] for m in client.get("/moderation/flagged", headers=MODERATOR).json()]
+def report_for_moderators(msg):
+    """What a recipient's client does: decrypt the message and re-seal it for every moderator."""
+    inner = wc.unseal(msg["ciphertext"], KEYS["ria"], "ria")
+    return {"reports": {m["username"]: wc.seal(inner, wc.load_public_key(m["public_key"]))
+                        for m in client.get("/moderation/keys", headers=RECIPIENT).json()}}
 
-    msg_id = client.get("/inbox", headers=RECIPIENT).json()[0]["id"]
-    assert msg_id not in flagged_ids()  # unflagged is invisible
-    assert client.post(f"/messages/{msg_id}/flag", headers=OTHER).status_code == 404  # not their message
-    assert client.post(f"/messages/{msg_id}/flag", headers=RECIPIENT).status_code == 200
-    assert msg_id in flagged_ids()
+
+def test_flagging_and_moderation():
+    def flagged():
+        return {f["id"]: f for f in client.get("/moderation/flagged", headers=MODERATOR).json()}
+
+    msg = client.get("/inbox", headers=RECIPIENT).json()[0]
+    body = report_for_moderators(msg)
+    assert msg["id"] not in flagged()  # unflagged is invisible
+    assert client.post(f"/messages/{msg['id']}/flag", headers=OTHER, json=body).status_code == 404  # not theirs
+    assert client.post(f"/messages/{msg['id']}/flag", headers=RECIPIENT,
+                       json={"reports": {}}).status_code == 400  # not sealed for every moderator
+    assert client.post(f"/messages/{msg['id']}/flag", headers=RECIPIENT, json=body).status_code == 200
+    assert client.post(f"/messages/{msg['id']}/flag", headers=RECIPIENT, json=body).status_code == 409
+    assert client.get("/inbox", headers=RECIPIENT).json()[0]["flagged"]
+
+    # The moderator decrypts the report and verifies a real pseudonym sent it to ria.
+    report = flagged()[msg["id"]]
+    pk = client.get("/tokens/public-key").json()
+    inner = wc.unseal(report["report"], KEYS["moe"], report["recipient"])
+    wc.verify_inner(inner, "ria", int(pk["n"], 16), pk["e"])
+    assert inner["text"] == TEXT and inner["pseudonym"] == CRED[1].hex()
     for who in (ADMIN, SENDER, RECIPIENT):
         assert client.get("/moderation/flagged", headers=who).status_code == 403
+    assert client.get("/moderation/keys", headers=ADMIN).status_code == 403
 
 
 def test_no_sender_info_stored():
     with tx() as db:
         assert db.execute("SELECT * FROM messages").fetchone().keys() == \
-            ["id", "recipient", "ciphertext", "flagged", "delivered"]
+            ["id", "recipient", "ciphertext", "delivered"]
         tables = {r["name"]: r["sql"] for r in db.execute("SELECT name, sql FROM sqlite_master WHERE type = 'table'")}
     assert "WITHOUT ROWID" in tables["messages"] and "WITHOUT ROWID" in tables["spent_tokens"]
     with open(os.environ["WC_DB"], "rb") as f:

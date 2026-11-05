@@ -43,9 +43,13 @@ CREATE TABLE IF NOT EXISTS messages (
     id         TEXT PRIMARY KEY,
     recipient  TEXT NOT NULL REFERENCES users(username),
     ciphertext TEXT NOT NULL,
-    flagged    INTEGER NOT NULL DEFAULT 0,
     delivered  INTEGER NOT NULL DEFAULT 0
 ) WITHOUT ROWID;
+-- A recipient's report on a message: JSON {moderator: envelope}, readable only by moderators.
+CREATE TABLE IF NOT EXISTS flags (
+    message_id TEXT PRIMARY KEY REFERENCES messages(id),
+    reports    TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS audit_log (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     ts        TEXT NOT NULL,

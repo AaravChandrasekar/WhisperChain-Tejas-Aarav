@@ -45,10 +45,12 @@ def ok(user, *args, **kwargs):
 # Set up the way the README demo does: register, admin approves, open a round, log in.
 ok("cara", "register", "--roles", "recipient")
 ok("cole", "register", "--roles", "sender")
+ok("mia", "register", "--roles", "moderator")
 ok("root", "login", password="rootpass1")
 assert "cara: recipient" in ok("root", "pending") and "cole: sender" in ok("root", "pending")
 ok("root", "approve", "cara")
 ok("root", "approve", "cole")
+ok("root", "approve", "mia")
 ok("root", "open-round")
 ok("cara", "login")
 ok("cole", "login")
@@ -93,6 +95,8 @@ def test_flag_and_audit():
     msg_id = next(line.split("]")[0][1:] for line in ok("cara", "inbox").splitlines()
                   if "verified anonymous sender" in line)
     assert "Flagged" in ok("cara", "flag", msg_id)
+    assert f"[{msg_id}] [flagged]" in ok("cara", "inbox")
+    assert "Already flagged" in run("cara", "flag", msg_id)[1]
     out = ok("root", "audit")
     assert "Hash chain valid: True" in out and "message_flagged" in out
     assert "cara" not in out and "cole" not in out

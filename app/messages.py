@@ -1,4 +1,4 @@
-"""Key directory, message submission, inbox, flagging, moderation view and audit log access (RBAC checks)."""
+"""Key directory, message submission, inbox and audit log access (RBAC checks)."""
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -67,32 +67,13 @@ def inbox(user: dict = Depends(require("recipient"))):
     """Own messages only, still encrypted: they're decrypted on the recipient's device.
     The first fetch of each message is logged as a delivery."""
     with tx() as db:
-        rows = db.execute("SELECT id, ciphertext, flagged, delivered FROM messages WHERE recipient = ?",
-                          (user["username"],)).fetchall()
+        rows = db.execute("SELECT id, ciphertext, delivered, id IN (SELECT message_id FROM flags) AS flagged "
+                          "FROM messages WHERE recipient = ?", (user["username"],)).fetchall()
         new = [r["id"] for r in rows if not r["delivered"]]
         db.executemany("UPDATE messages SET delivered = 1 WHERE id = ?", [(i,) for i in new])
         for _ in new:
             audit(db, "message_delivered", "recipient")
-    return [{"id": r["id"], "ciphertext": r["ciphertext"], "flagged": r["flagged"]} for r in rows]
-
-
-@router.post("/messages/{msg_id}/flag")
-def flag(msg_id: str, user: dict = Depends(require("recipient"))):
-    with tx() as db:
-        updated = db.execute("UPDATE messages SET flagged = 1 WHERE id = ? AND recipient = ?",
-                             (msg_id, user["username"])).rowcount
-        if not updated:  # same response for "doesn't exist" and "not yours"
-            raise HTTPException(404, "No such message in your inbox")
-        audit(db, "message_flagged", "recipient")
-    return {"id": msg_id, "flagged": True}
-
-
-@router.get("/moderation/flagged")
-def flagged(_: dict = Depends(require("moderator"))):
-    """Moderators only, and only flagged messages. No sender info exists to return."""
-    with tx() as db:
-        rows = db.execute("SELECT id, ciphertext FROM messages WHERE flagged = 1").fetchall()
-    return [dict(r) for r in rows]
+    return [{"id": r["id"], "ciphertext": r["ciphertext"], "flagged": bool(r["flagged"])} for r in rows]
 
 
 @router.get("/audit")

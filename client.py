@@ -192,7 +192,18 @@ def cmd_inbox(user: str):
 
 
 def cmd_flag(user: str, message_id: str):
-    call("POST", f"/messages/{message_id}/flag", user=user)
+    """Decrypt the message and re-seal it for every moderator, so only they can read the report."""
+    _, key = unlock(user)
+    msg = next((m for m in call("GET", "/inbox", user=user) if m["id"] == message_id), None)
+    if not msg:
+        raise ClientError(f"No message {message_id} in your inbox")
+    try:
+        inner = wc.unseal(msg["ciphertext"], key, user)
+    except wc.InvalidMessage as exc:
+        raise ClientError(str(exc)) from None
+    reports = {m["username"]: wc.seal(inner, wc.load_public_key(m["public_key"]))
+               for m in call("GET", "/moderation/keys", user=user)}
+    call("POST", f"/messages/{message_id}/flag", user=user, json={"reports": reports})
     print(f"Flagged {message_id} for moderators.")
 
 
