@@ -4,6 +4,7 @@ import pytest
 from helpers import ADMIN, KEYS, client, get_credential, make_token, new_user
 
 import whisper_crypto as wc
+from app import moderation
 from app.db import tx
 
 RECIPIENT = new_user("ria", ["recipient"])
@@ -63,23 +64,64 @@ def test_recipient_decrypts_and_verifies_locally():
         wc.unseal(msg["ciphertext"], KEYS["omar"], "omar")
 
 
-def test_flagging_and_moderation():
-    def flagged_ids():
-        return [m["id"] for m in client.get("/moderation/flagged", headers=MODERATOR).json()]
+def report_for_moderators(msg):
+    """What a recipient's client does: decrypt the message and re-seal it for every moderator."""
+    inner = wc.unseal(msg["ciphertext"], KEYS["ria"], "ria")
+    return {"reports": {m["username"]: wc.seal(inner, wc.load_public_key(m["public_key"]))
+                        for m in client.get("/moderation/keys", headers=RECIPIENT).json()}}
 
-    msg_id = client.get("/inbox", headers=RECIPIENT).json()[0]["id"]
-    assert msg_id not in flagged_ids()  # unflagged is invisible
-    assert client.post(f"/messages/{msg_id}/flag", headers=OTHER).status_code == 404  # not their message
-    assert client.post(f"/messages/{msg_id}/flag", headers=RECIPIENT).status_code == 200
-    assert msg_id in flagged_ids()
+
+def flagged():
+    return {f["id"]: f for f in client.get("/moderation/flagged", headers=MODERATOR).json()}
+
+
+def audit_actions():
+    return [e["action"] for e in client.get("/audit", headers=MODERATOR).json()["entries"]]
+
+
+def test_flagging_and_moderation(monkeypatch):
+    monkeypatch.setattr(moderation, "FLAG_ALERT", len(flagged()) + 1)  # this flag crosses the threshold
+    msg = client.get("/inbox", headers=RECIPIENT).json()[0]
+    body = report_for_moderators(msg)
+    assert msg["id"] not in flagged()  # unflagged is invisible
+    assert client.post(f"/messages/{msg['id']}/flag", headers=OTHER, json=body).status_code == 404  # not theirs
+    assert client.post(f"/messages/{msg['id']}/flag", headers=RECIPIENT,
+                       json={"reports": {}}).status_code == 400  # not sealed for every moderator
+    assert client.post(f"/messages/{msg['id']}/flag", headers=RECIPIENT, json=body).status_code == 200
+    assert client.post(f"/messages/{msg['id']}/flag", headers=RECIPIENT, json=body).status_code == 409
+    assert client.get("/inbox", headers=RECIPIENT).json()[0]["flagged"]
+
+    # The moderator decrypts the report and verifies a real pseudonym sent it to ria.
+    report = flagged()[msg["id"]]
+    pk = client.get("/tokens/public-key").json()
+    inner = wc.unseal(report["report"], KEYS["moe"], report["recipient"])
+    wc.verify_inner(inner, "ria", int(pk["n"], 16), pk["e"])
+    assert inner["text"] == TEXT and inner["pseudonym"] == CRED[1].hex()
     for who in (ADMIN, SENDER, RECIPIENT):
         assert client.get("/moderation/flagged", headers=who).status_code == 403
+    assert client.get("/moderation/keys", headers=ADMIN).status_code == 403
+    assert "alert_flag_threshold" in audit_actions()
+
+
+def test_freeze_blocks_sender(monkeypatch):
+    with tx() as db:
+        frozen = db.execute("SELECT COUNT(*) FROM frozen_pseudonyms").fetchone()[0]
+    monkeypatch.setattr(moderation, "FREEZE_ALERT", frozen + 1)  # this freeze crosses the threshold
+    msg_id = client.get("/inbox", headers=RECIPIENT).json()[0]["id"]
+    body = {"pseudonym": CRED[1].hex()}  # what the moderator read from the verified report
+    assert client.post(f"/moderation/flags/{msg_id}/freeze", headers=ADMIN, json=body).status_code == 403
+    assert client.post(f"/moderation/flags/{msg_id}/freeze", headers=MODERATOR, json=body).status_code == 200
+    assert msg_id not in flagged()  # resolved, so out of the queue
+    assert client.post(f"/moderation/flags/{msg_id}/dismiss", headers=MODERATOR).status_code == 404
+    rid = client.post("/admin/rounds/open", headers=ADMIN).json()["round"]
+    assert send(make_token(*CRED, rid), envelope(rid)).status_code == 403  # frozen, even in a new round
+    assert {"token_frozen", "alert_freeze_threshold"} <= set(audit_actions())
 
 
 def test_no_sender_info_stored():
     with tx() as db:
         assert db.execute("SELECT * FROM messages").fetchone().keys() == \
-            ["id", "recipient", "ciphertext", "flagged", "delivered"]
+            ["id", "recipient", "ciphertext", "delivered"]
         tables = {r["name"]: r["sql"] for r in db.execute("SELECT name, sql FROM sqlite_master WHERE type = 'table'")}
     assert "WITHOUT ROWID" in tables["messages"] and "WITHOUT ROWID" in tables["spent_tokens"]
     with open(os.environ["WC_DB"], "rb") as f:
@@ -95,7 +137,7 @@ def test_audit_log_access_and_events():
     assert log["chain_valid"]
     actions = [e["action"] for e in log["entries"]]
     assert {"key_registered", "credential_issued", "token_used", "message_sent", "token_rejected",
-            "message_flagged"} <= set(actions)
+            "message_flagged", "flags_reviewed", "audit_viewed"} <= set(actions)
     with tx() as db:
         delivered = db.execute("SELECT COUNT(*) FROM messages WHERE delivered = 1").fetchone()[0]
     assert actions.count("message_delivered") == delivered  # each logged once, however often inboxes are fetched

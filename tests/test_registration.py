@@ -1,8 +1,10 @@
+import sqlite3
+
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 
 import whisper_crypto as wc
-from app.audit import verify_chain
+from app.audit import _hash, verify_chain
 from app.db import tx
 from app.main import app
 
@@ -60,8 +62,30 @@ def test_audit_log_is_append_only_and_chained():
         assert verify_chain(db)
         rows = db.execute("SELECT action, role FROM audit_log").fetchall()
         assert all("alex" not in tuple(r) for r in rows)  # no identities logged
+        assert {"login", "login_failed"} <= {r["action"] for r in rows}
         try:
             db.execute("DELETE FROM audit_log")
             assert False
         except Exception as e:
             assert "append-only" in str(e)
+
+
+def copy_of_log(rows):
+    db = sqlite3.connect(":memory:")
+    db.row_factory = sqlite3.Row
+    db.execute("CREATE TABLE audit_log (id, ts, action, role, prev_hash, hash, sig)")
+    db.executemany("INSERT INTO audit_log VALUES (:id, :ts, :action, :role, :prev_hash, :hash, :sig)", rows)
+    return db
+
+
+def test_rewritten_log_fails_signature_check():
+    """Someone with database access edits an entry and recomputes every hash, but can't re-sign."""
+    with tx() as db:
+        rows = [dict(r) for r in db.execute("SELECT * FROM audit_log ORDER BY id")]
+    assert verify_chain(copy_of_log(rows))
+    rows[0]["action"] = "nothing_happened"
+    prev = "0" * 64
+    for r in rows:
+        r["prev_hash"], r["hash"] = prev, _hash(prev, r["ts"], r["action"], r["role"])
+        prev = r["hash"]
+    assert not verify_chain(copy_of_log(rows))

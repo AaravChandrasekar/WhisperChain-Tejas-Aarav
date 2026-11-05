@@ -43,16 +43,27 @@ CREATE TABLE IF NOT EXISTS messages (
     id         TEXT PRIMARY KEY,
     recipient  TEXT NOT NULL REFERENCES users(username),
     ciphertext TEXT NOT NULL,
-    flagged    INTEGER NOT NULL DEFAULT 0,
     delivered  INTEGER NOT NULL DEFAULT 0
 ) WITHOUT ROWID;
+-- A recipient's report on a message: JSON {moderator: envelope}, readable only by moderators.
+CREATE TABLE IF NOT EXISTS flags (
+    message_id TEXT PRIMARY KEY REFERENCES messages(id),
+    reports    TEXT NOT NULL,
+    status     TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'dismissed', 'frozen'))
+);
+-- Pseudonyms frozen by a moderator; their tokens are refused. Still not linkable to a user.
+CREATE TABLE IF NOT EXISTS frozen_pseudonyms (
+    pseudonym_hash TEXT PRIMARY KEY,
+    frozen_at      TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS audit_log (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     ts        TEXT NOT NULL,
     action    TEXT NOT NULL,
     role      TEXT NOT NULL,
     prev_hash TEXT NOT NULL,
-    hash      TEXT NOT NULL
+    hash      TEXT NOT NULL,
+    sig       TEXT NOT NULL  -- Ed25519 signature over hash by the system audit key
 );
 -- Append-only: the database itself rejects edits/deletes to the audit log.
 CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit_log
