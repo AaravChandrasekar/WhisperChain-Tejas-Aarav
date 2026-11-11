@@ -55,3 +55,19 @@ def test_server_cannot_link_token_to_user():
     with tx() as db:
         assert db.execute("SELECT * FROM credentials_issued").fetchone().keys() == ["username"]  # no pseudonym stored
         assert db.execute("SELECT * FROM spent_tokens").fetchone().keys() == ["pseudonym_hash", "round_id"]  # no user
+
+
+def test_opening_a_round_logs_closing_the_previous_one():
+    def actions():
+        with tx() as db:
+            return [r["action"] for r in db.execute("SELECT action FROM audit_log ORDER BY id")]
+
+    client.post("/admin/rounds/open", headers=ADMIN)  # make sure a round is open
+    before = len(actions())
+    client.post("/admin/rounds/open", headers=ADMIN)
+    assert actions()[before:] == ["round_closed", "round_opened"]
+
+    client.post("/admin/rounds/close", headers=ADMIN)
+    before = len(actions())
+    client.post("/admin/rounds/open", headers=ADMIN)  # nothing open to close
+    assert actions()[before:] == ["round_opened"]
