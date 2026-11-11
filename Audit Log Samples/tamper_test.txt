@@ -1,0 +1,15 @@
+Tamper-resistance checks run against the database produced by this demo.
+
+0. verify_chain() on the untouched log (84 entries) -> True
+1. UPDATE audit_log SET action = 'login' WHERE action = 'login_failed'
+   -> rejected by trigger: audit log is append-only
+2. DELETE FROM audit_log WHERE action = 'token_frozen'
+   -> rejected by trigger: audit log is append-only
+3. Attacker drops the triggers and rewrites 'login_failed' -> 'login' (hashes untouched)
+   -> verify_chain() = False  (stored hash no longer matches the entry)
+4. Attacker deletes entry #71 (token_frozen) to hide a moderator action
+   -> verify_chain() = False  (next entry's prev_hash points at a missing entry)
+5. Attacker rewrites the entry AND recomputes the whole hash chain, but lacks audit_key.pem
+   -> verify_chain() = False  (Ed25519 signatures no longer match the new hashes)
+6. Attacker deletes the 3 newest entries; what remains is still a perfectly linked, signed chain
+   -> verify_chain() = False  (head file outside the DB says entry #84 must exist)

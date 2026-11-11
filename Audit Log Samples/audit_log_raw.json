@@ -1,0 +1,758 @@
+[
+  {
+    "id": 1,
+    "ts": "2026-11-11T16:24:21.056342+00:00",
+    "action": "admin_bootstrapped",
+    "role": "admin",
+    "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "hash": "8d50aa3c14d76fde2c133afdf2293dfaad394f414298922bdf18b46c2652cabd",
+    "sig": "6dd91c1a35fb09c02c2ee09c6079049dc723b718731a916a0952f4cb429ad4ce6274afb2f07543b8f75658b1b5291d7d66505bdd6ad65a5b3601ccd4a596ac00"
+  },
+  {
+    "id": 2,
+    "ts": "2026-11-11T16:24:21.702837+00:00",
+    "action": "login",
+    "role": "admin",
+    "prev_hash": "8d50aa3c14d76fde2c133afdf2293dfaad394f414298922bdf18b46c2652cabd",
+    "hash": "b10cf6d88ee14494aa191626f4fc0b168f7917909825eda06fc0ff3e9309746a",
+    "sig": "8c3a884a41fe8aab12995903495a4a00dae8fa338db96b8b025ee7c5d742495b9095aacfcb0dd88f12b593d348fb01c0cb776f59166d892e08982dbeba5ca806"
+  },
+  {
+    "id": 3,
+    "ts": "2026-11-11T16:24:21.882005+00:00",
+    "action": "registration_requested",
+    "role": "recipient",
+    "prev_hash": "b10cf6d88ee14494aa191626f4fc0b168f7917909825eda06fc0ff3e9309746a",
+    "hash": "33be264e323b3abfaaf2e189d7612ac09e87515dc13b64249fa45448bf3120c6",
+    "sig": "31d519dc714d93e0796c46db86f5bfe11c69bb84addcc4359f2c560484f414c2e3855a20ecea34daa8683a4741ca18f98ca74ae2555334bc905c58f20da7c604"
+  },
+  {
+    "id": 4,
+    "ts": "2026-11-11T16:24:21.882143+00:00",
+    "action": "key_registered",
+    "role": "recipient",
+    "prev_hash": "33be264e323b3abfaaf2e189d7612ac09e87515dc13b64249fa45448bf3120c6",
+    "hash": "cc69590d4546d5bfaf2cb224cede9e85aac91f40bc376bef2f1f15018847d1e9",
+    "sig": "ef7ecd2d0a7bf3fc0bd6a304fcf0b559fa4cbd71122734a2ecd8aeafbcf696ae41d77cab7e427abb0ad1281bb8e819f0d9a28e710ff9fd5bed3577e5d2fa3f06"
+  },
+  {
+    "id": 5,
+    "ts": "2026-11-11T16:24:21.998834+00:00",
+    "action": "registration_requested",
+    "role": "recipient",
+    "prev_hash": "cc69590d4546d5bfaf2cb224cede9e85aac91f40bc376bef2f1f15018847d1e9",
+    "hash": "f7b6261386df36eaffa626b735ae503c9e2dfe33e203b9287a1b4b0bcac15af1",
+    "sig": "dc93221fef8f5da0e74ba38f007e8db3210401a92c7fd7bf627070d147f5cd2b1e0aef86c8f08d5072f59162ed0f895ab35261b2c514a35bc18e7682f8d82c06"
+  },
+  {
+    "id": 6,
+    "ts": "2026-11-11T16:24:21.998971+00:00",
+    "action": "key_registered",
+    "role": "recipient",
+    "prev_hash": "f7b6261386df36eaffa626b735ae503c9e2dfe33e203b9287a1b4b0bcac15af1",
+    "hash": "315731ed9e4b4f901dd806552b3c909296f1360d75244ccc617fe3b6b03b9c38",
+    "sig": "704348380215f732b4d1d669f4ad01d29a090790b17c09d1471efb38c38eef5b3dd5c89b35257f98026ad9d34985ebd1d456ef1301771c29fcba1f8d8b60ec0b"
+  },
+  {
+    "id": 7,
+    "ts": "2026-11-11T16:24:22.115901+00:00",
+    "action": "registration_requested",
+    "role": "moderator",
+    "prev_hash": "315731ed9e4b4f901dd806552b3c909296f1360d75244ccc617fe3b6b03b9c38",
+    "hash": "2fdfae300e0c13ffb1924740a00d9c67c60629c4d9c46272d9aaa63bb1aee97d",
+    "sig": "6fe748acf3fee333b4e0d9bbbf2a4059cb97d422c4dedd50b26c71f072b87b9ed3be8e01e5192cd437e417a427a5bb0183be78b826625298a3b8db0323463001"
+  },
+  {
+    "id": 8,
+    "ts": "2026-11-11T16:24:22.116031+00:00",
+    "action": "key_registered",
+    "role": "moderator",
+    "prev_hash": "2fdfae300e0c13ffb1924740a00d9c67c60629c4d9c46272d9aaa63bb1aee97d",
+    "hash": "624df106a854efcadd5571e655d447b371aebf70c3b8e2d9961a1eb5ea74d862",
+    "sig": "875bc4044bd1d082ad09efd97ee15abd02a0f2c95657a2b629c37a9c529aa7f196af25dd9a601e3abedfc7dac7a1e3b2c6a73921ef39e9792202b575de462a0a"
+  },
+  {
+    "id": 9,
+    "ts": "2026-11-11T16:24:22.308644+00:00",
+    "action": "registration_requested",
+    "role": "sender",
+    "prev_hash": "624df106a854efcadd5571e655d447b371aebf70c3b8e2d9961a1eb5ea74d862",
+    "hash": "19e59017c9445d5e28fadd61c95f458976b246d1c72f98c8a8b76062ca1e9a6d",
+    "sig": "f83357c7e5fb2f197d47beb72168da34dc2b4d939b21d47f94aab4f3f761ab31e4ba6d98b094067c101775d84712564f2d9fd7e215707ba373450f2d9504fb02"
+  },
+  {
+    "id": 10,
+    "ts": "2026-11-11T16:24:22.308780+00:00",
+    "action": "key_registered",
+    "role": "sender",
+    "prev_hash": "19e59017c9445d5e28fadd61c95f458976b246d1c72f98c8a8b76062ca1e9a6d",
+    "hash": "24b282c21ec0a64ca5062165a967240ecd9d9a497bfa9c96b229501b26d3b603",
+    "sig": "dcbd55d1252286dd6586f25c05a2869d34e54794406a4e072edd4a1d09163f90612154c14961d2ae004ec24b3ff7c495f938e56e00331e688c0f91d8003c2b01"
+  },
+  {
+    "id": 11,
+    "ts": "2026-11-11T16:24:22.651089+00:00",
+    "action": "registration_requested",
+    "role": "sender",
+    "prev_hash": "24b282c21ec0a64ca5062165a967240ecd9d9a497bfa9c96b229501b26d3b603",
+    "hash": "5d7fb156d68e8b020b0dd6e4302362c69e48b73872728b9a7329cbae7ac58135",
+    "sig": "8ee6c5a141087e8d2eae88b5b9976473a715244938223e4646ea6cc9092c351e40f5375235760a82e2a8034ca60b4201d481c642641849a38fbbab3a387cc909"
+  },
+  {
+    "id": 12,
+    "ts": "2026-11-11T16:24:22.651232+00:00",
+    "action": "key_registered",
+    "role": "sender",
+    "prev_hash": "5d7fb156d68e8b020b0dd6e4302362c69e48b73872728b9a7329cbae7ac58135",
+    "hash": "412789216ce3eb89e76b0ce359ceaa00758d88f31eccf23eb6b656e1d08149c2",
+    "sig": "91dd57746577af925c1bc350c8a92f4abf71e3df0caadf8c0c419b19e5d15bb2e17ac7adde3d790a24700dbc0080231ba57b7d8fc58531e25ca3e0ca96b2aa00"
+  },
+  {
+    "id": 13,
+    "ts": "2026-11-11T16:24:22.997219+00:00",
+    "action": "registration_requested",
+    "role": "sender",
+    "prev_hash": "412789216ce3eb89e76b0ce359ceaa00758d88f31eccf23eb6b656e1d08149c2",
+    "hash": "bf5ab12172a2089bdf3d9dae81cf2418d203932f5a03c6e89fad6da061f10e7d",
+    "sig": "950fbae355da49b31ff6ec2c1c36577607fe5bc171d7d7acbe7c2a0c6885be28de8b84fcf107f52a87058c3f75a19adfafc56d33638d6c884c03c5f6da1a4303"
+  },
+  {
+    "id": 14,
+    "ts": "2026-11-11T16:24:22.997387+00:00",
+    "action": "key_registered",
+    "role": "sender",
+    "prev_hash": "bf5ab12172a2089bdf3d9dae81cf2418d203932f5a03c6e89fad6da061f10e7d",
+    "hash": "9d56d7e980dadd3410fb56988363b707af5c95b4ad8a8c577b6a87658ca92ece",
+    "sig": "c3a5c1aa496fe67c3c111f3b2af99fd7067ac714a32236ea9571ee5e8b3fcc9e99934a4df617fad4ba73ec9497e984b454dfadbe5db9c810ff2d01fee13d5507"
+  },
+  {
+    "id": 15,
+    "ts": "2026-11-11T16:24:23.179925+00:00",
+    "action": "registration_requested",
+    "role": "sender",
+    "prev_hash": "9d56d7e980dadd3410fb56988363b707af5c95b4ad8a8c577b6a87658ca92ece",
+    "hash": "248a24840db3f71e2d5f8f194a5c4c3dabb098fe8393b803468a07f12f3d8377",
+    "sig": "35e5967d352eff655e15d0f70b1d34787e45c505a37e4b87e44ba1b0c2b9d25656e81671b08e4d91862455a235edf83f0003edec63e8bf8f730bb3abc9eb3003"
+  },
+  {
+    "id": 16,
+    "ts": "2026-11-11T16:24:23.180065+00:00",
+    "action": "key_registered",
+    "role": "sender",
+    "prev_hash": "248a24840db3f71e2d5f8f194a5c4c3dabb098fe8393b803468a07f12f3d8377",
+    "hash": "693537eed84199a140ba641d5ceeb230a576a1e7f073e40ad1da42a824feaa7b",
+    "sig": "0ac144d61151d1831621e61f9d6eb414219e38f829b440257b011f43fbea7ae84cfeae2435eb0a4b9a2da2864a3746bb2cdbdbc9c528efc8be2eb334e9abe502"
+  },
+  {
+    "id": 17,
+    "ts": "2026-11-11T16:24:23.253813+00:00",
+    "action": "registration_requested",
+    "role": "sender",
+    "prev_hash": "693537eed84199a140ba641d5ceeb230a576a1e7f073e40ad1da42a824feaa7b",
+    "hash": "afc53085a1e03ae20164d87dfc5a20d4995666b148878c3cb4a6d50698e343a7",
+    "sig": "03b059c9131307e4c41aaa0e96597dd55861e743ae53eccd0aa1636b7c5b346aa976f6fcd2aa57325ec2d1156f42a68169473209feecc020bee508075f6b8c05"
+  },
+  {
+    "id": 18,
+    "ts": "2026-11-11T16:24:23.253946+00:00",
+    "action": "key_registered",
+    "role": "sender",
+    "prev_hash": "afc53085a1e03ae20164d87dfc5a20d4995666b148878c3cb4a6d50698e343a7",
+    "hash": "45e0a16dba4798fbb3f95742f0a24a8063a9db76573b49780b2306cbcded15cd",
+    "sig": "2bcd3ae55c01be4fd0fa2b43afab358bf7b27b9b429104e094d7bd80abc1d30fcc27bc0cc6151f803600f9a60beb0f26da4f7af0aeffa88564880f4c9c4af307"
+  },
+  {
+    "id": 19,
+    "ts": "2026-11-11T16:24:23.273721+00:00",
+    "action": "user_approved",
+    "role": "admin",
+    "prev_hash": "45e0a16dba4798fbb3f95742f0a24a8063a9db76573b49780b2306cbcded15cd",
+    "hash": "0b87f98436bff08925d8dd8b8d27970f07896efc18de9743e169c6413e584785",
+    "sig": "f836fa9d711ab59a71c0d684a5bf1b7706d49e690e25e83cdad976f973edbd57e43ec923be82c8b0bb4da61605d0e6fa72e7d756f7f7d44abdc8c5078901ad09"
+  },
+  {
+    "id": 20,
+    "ts": "2026-11-11T16:24:23.285074+00:00",
+    "action": "user_approved",
+    "role": "admin",
+    "prev_hash": "0b87f98436bff08925d8dd8b8d27970f07896efc18de9743e169c6413e584785",
+    "hash": "dc6ec284b80a240bd29d08b66a7580c0d2ea5422508b5f4fe464a5246267e413",
+    "sig": "b35e39ba2e512d0260f92febad8d63a2f20db2f39a85530b408e656278b38eeb93adef96e199d273894ad2225efdd975c71c40a8440bfac86b83e525eb5ba30e"
+  },
+  {
+    "id": 21,
+    "ts": "2026-11-11T16:24:23.294606+00:00",
+    "action": "user_approved",
+    "role": "admin",
+    "prev_hash": "dc6ec284b80a240bd29d08b66a7580c0d2ea5422508b5f4fe464a5246267e413",
+    "hash": "511fecfc71be66bf22150f4f28c0830e0eaee59eb7d2eec8dcd05041ee6ed414",
+    "sig": "581c50b7edac33d205c9bfcc7f7cdd3d5663e27668ee3c7879b32635a0be2c06651a6daf47e54db99380a3d51a34f53e7676680bddefe2f9f9afd8020929a608"
+  },
+  {
+    "id": 22,
+    "ts": "2026-11-11T16:24:23.305266+00:00",
+    "action": "user_approved",
+    "role": "admin",
+    "prev_hash": "511fecfc71be66bf22150f4f28c0830e0eaee59eb7d2eec8dcd05041ee6ed414",
+    "hash": "9cc69f5e31fa2b70eb12bc1a4d7f5269015a368abc90e495261ed845bc056bb7",
+    "sig": "1323dc9e260f785ddbdf97b1a184c25f6e5724bf3b874c66ba3542ac9ba574e24285c0923df247601119273359f1ba95890b431432365089309e441491ef4d0b"
+  },
+  {
+    "id": 23,
+    "ts": "2026-11-11T16:24:23.313813+00:00",
+    "action": "user_approved",
+    "role": "admin",
+    "prev_hash": "9cc69f5e31fa2b70eb12bc1a4d7f5269015a368abc90e495261ed845bc056bb7",
+    "hash": "c5bc57407ae436b5efe91207c2e0f103afaff0143269b286de533f66e81cbb03",
+    "sig": "442f8e47591ca96ccd4cd4c6f1dc7a972504d8a073c46c1f75d17ed78295717a4b1ef053667636aa0ed11ff3ac4fca2fc8c810b82c328133aa600843d973ff02"
+  },
+  {
+    "id": 24,
+    "ts": "2026-11-11T16:24:23.324692+00:00",
+    "action": "user_approved",
+    "role": "admin",
+    "prev_hash": "c5bc57407ae436b5efe91207c2e0f103afaff0143269b286de533f66e81cbb03",
+    "hash": "6395fdc8d77427face45de79339d3486f9004f45fbe222f512fe2d5f2cf29e53",
+    "sig": "a6e9dfca652ecb1b6aff885b064c21a800aeb347898ae091fae2e33f3038eda22f556fa33e72aef734a278151fe7fe8211ec90ffc6356368eda526fb31b04207"
+  },
+  {
+    "id": 25,
+    "ts": "2026-11-11T16:24:23.334442+00:00",
+    "action": "user_approved",
+    "role": "admin",
+    "prev_hash": "6395fdc8d77427face45de79339d3486f9004f45fbe222f512fe2d5f2cf29e53",
+    "hash": "19a0ebae6cb80e468eb7c38968cfb01bca100aa41bd683fdeab66ae6ec847e65",
+    "sig": "e9315b3f666f672d0e5c07d2f38c96ae5892d1c5ea5cf440650b52cf8c3ea01a7272b095b919a81c463fe1fb0a6ccc13cc479a1a0e11382eca622b5d614e3d01"
+  },
+  {
+    "id": 26,
+    "ts": "2026-11-11T16:24:23.344323+00:00",
+    "action": "user_approved",
+    "role": "admin",
+    "prev_hash": "19a0ebae6cb80e468eb7c38968cfb01bca100aa41bd683fdeab66ae6ec847e65",
+    "hash": "73c5146dae7f08b634232cad24ad344f117cf34d485af6d2c34580aca9945368",
+    "sig": "27dbda7f59cffb8159ac4f3740d01c3cf75f52b373838a75c8469265a166ef0e3457946694a1b415ff799a3c2154c5d3e3389373c54e90ab8c42bd679eae1800"
+  },
+  {
+    "id": 27,
+    "ts": "2026-11-11T16:24:23.353263+00:00",
+    "action": "roles_changed",
+    "role": "admin",
+    "prev_hash": "73c5146dae7f08b634232cad24ad344f117cf34d485af6d2c34580aca9945368",
+    "hash": "fba04a11fa4d79d5807547a5d67855164b648dd91d9cee1fcef7a66ec2b1e8ec",
+    "sig": "0a19ba1dc77d66f767198b23d5952e8196322a8b12e4e293339b023208112960ad554b491fda48709480e60fa4aff6afbf98ff1ffcb16b3e6e3f51e47eb84c0a"
+  },
+  {
+    "id": 28,
+    "ts": "2026-11-11T16:24:23.361886+00:00",
+    "action": "user_revoked",
+    "role": "admin",
+    "prev_hash": "fba04a11fa4d79d5807547a5d67855164b648dd91d9cee1fcef7a66ec2b1e8ec",
+    "hash": "6b774b2a04fb84b0eb1a2b739abe8de968545520b5074f3ae61ed3446d6351d2",
+    "sig": "ebe2cc4e03350db2b451493194bf5296c908971672d208fbf0bd940804b6e50ed4532e84fba1b51303f77235dea28f3142116f84bbf86d0b4cb523d11d675804"
+  },
+  {
+    "id": 29,
+    "ts": "2026-11-11T16:24:23.406765+00:00",
+    "action": "login_failed",
+    "role": "unknown",
+    "prev_hash": "6b774b2a04fb84b0eb1a2b739abe8de968545520b5074f3ae61ed3446d6351d2",
+    "hash": "30576d29b0abdf7276a4d289c89ffb48c0944d3fcc94f5c56471458b0e296c33",
+    "sig": "ac394a2b9c2772c35edf3169da3207d0603167fa513ccf27edf8bc128c88128ef6198e6ce03597d6fd4c5d17cab9b2dc2c70a0548e157701c696bb1192b04b03"
+  },
+  {
+    "id": 30,
+    "ts": "2026-11-11T16:24:23.449952+00:00",
+    "action": "login_failed",
+    "role": "unknown",
+    "prev_hash": "30576d29b0abdf7276a4d289c89ffb48c0944d3fcc94f5c56471458b0e296c33",
+    "hash": "71190589d74a962b5031c7e7dc7c65323a747f3502addc66b1c0424ad2e4c583",
+    "sig": "e2b812b5e2125906ecea27c32a000f2136571ef7daa2945afba4f352318a54714ed7de036d2386014466b7a0da538c43d7dfd88d72f3aabc3687f549967f7d04"
+  },
+  {
+    "id": 31,
+    "ts": "2026-11-11T16:24:23.460917+00:00",
+    "action": "round_opened",
+    "role": "admin",
+    "prev_hash": "71190589d74a962b5031c7e7dc7c65323a747f3502addc66b1c0424ad2e4c583",
+    "hash": "b30ea3f1b7122c373ae1634cba849a4a3d7a59453c0bcb5ac628a4f1b908f94e",
+    "sig": "f8efbd6fbba7290cf2529b01939f5372c53f14fbdfa0d8ba0d1272c7bb6e0036ac8fd6737fa0b2682cbbfb0f5f023980c39ffb1c02c2fa9b86dcca75aaca8c0c"
+  },
+  {
+    "id": 32,
+    "ts": "2026-11-11T16:24:23.503226+00:00",
+    "action": "login",
+    "role": "sender",
+    "prev_hash": "b30ea3f1b7122c373ae1634cba849a4a3d7a59453c0bcb5ac628a4f1b908f94e",
+    "hash": "754a1b8aa9880654f64389338fb3342c05f5ed0d23bcf7bf36ade7da28c89503",
+    "sig": "a7dc00eaaa01723b2e64ff3db4b3983b39681ed5d09e06992c1e9b40e6c57d1b9c78aee6ea86eca4e3ca07e317f8666b4a21df6c205eab4a9ee0ffcf2e3e4f09"
+  },
+  {
+    "id": 33,
+    "ts": "2026-11-11T16:24:23.641961+00:00",
+    "action": "credential_issued",
+    "role": "sender",
+    "prev_hash": "754a1b8aa9880654f64389338fb3342c05f5ed0d23bcf7bf36ade7da28c89503",
+    "hash": "387be36e9039a29e0bed2055e52460b5ef8f4e5d60b4ff408b01a1de98a856b0",
+    "sig": "04e57338062c709e483868016ba2b510d1fef92a3985f600b8f405eeb6d1af7ead1c25c0a092c723ebdc977572f37f8d7f292ad4636c59aa3f41b15f9c752a00"
+  },
+  {
+    "id": 34,
+    "ts": "2026-11-11T16:24:23.721938+00:00",
+    "action": "login",
+    "role": "sender",
+    "prev_hash": "387be36e9039a29e0bed2055e52460b5ef8f4e5d60b4ff408b01a1de98a856b0",
+    "hash": "3f678a9ac690df35ecb3fed73dd6d5eab260a77ed7805273f28ecc2fa1c07381",
+    "sig": "3defce73217f2ac01f9bedd85549a3401ed4733598ae1295d8e21edc9563b8c4f14eb7d517e16752ac7d207b4b45897729530ee26e8241557e756fa2203cf909"
+  },
+  {
+    "id": 35,
+    "ts": "2026-11-11T16:24:23.852331+00:00",
+    "action": "credential_issued",
+    "role": "sender",
+    "prev_hash": "3f678a9ac690df35ecb3fed73dd6d5eab260a77ed7805273f28ecc2fa1c07381",
+    "hash": "aa78eff6a79493952a31b48697e24edf5efde9a0546f5d3f395bef09bb9ec99b",
+    "sig": "fd6f200b05fdd0bf667c1513877a7343b56ef0d6721dafeb10feaad7be15f1622fede967e7d89380cf90ec3e6a7dfbb41f8ed8c0c88f00919349d7ad991e3507"
+  },
+  {
+    "id": 36,
+    "ts": "2026-11-11T16:24:23.934547+00:00",
+    "action": "login",
+    "role": "sender",
+    "prev_hash": "aa78eff6a79493952a31b48697e24edf5efde9a0546f5d3f395bef09bb9ec99b",
+    "hash": "74af1dc387722a10aab596393fb9512e1265e143c5e27494a6c573d5dc6655c3",
+    "sig": "b09b9b8c5cc699398822137c1e3a0b748e8752327eb7fcced728686d92772bf64d5202553c5979ab051e6c850f529f5374e3a39796a66e97a0c37570fd49ad06"
+  },
+  {
+    "id": 37,
+    "ts": "2026-11-11T16:24:24.065443+00:00",
+    "action": "credential_issued",
+    "role": "sender",
+    "prev_hash": "74af1dc387722a10aab596393fb9512e1265e143c5e27494a6c573d5dc6655c3",
+    "hash": "5964dd9980e2c134a777761834b95e18f3e0111b56040bb064399af09e17b6e5",
+    "sig": "1a9814177164a60c2c907e4e2ebb04a1fdbe81597a09ff922228a38917824d6dad4847aac76f8cc7ef21ada2aa4575395fa8640931c8ea8f0f61bf2e4b83d605"
+  },
+  {
+    "id": 38,
+    "ts": "2026-11-11T16:24:24.227965+00:00",
+    "action": "token_used",
+    "role": "sender",
+    "prev_hash": "5964dd9980e2c134a777761834b95e18f3e0111b56040bb064399af09e17b6e5",
+    "hash": "75f6aeaec44b74887cb4e11f9330fc0fcb42be0f0a26ab22924a328b3abf1706",
+    "sig": "f97be8edfc025ea97d86738d7cbe129ce35400e6c3bbc1359dfd5f4d82e5dbc0eda5e689fd682f4d8d8b666bf7fbc5d4c60fc85596f4def3f5e165594006d60a"
+  },
+  {
+    "id": 39,
+    "ts": "2026-11-11T16:24:24.228186+00:00",
+    "action": "message_sent",
+    "role": "sender",
+    "prev_hash": "75f6aeaec44b74887cb4e11f9330fc0fcb42be0f0a26ab22924a328b3abf1706",
+    "hash": "62920c0b4ec34ba780109a82f9fd4dff6e18578162cbc7b710f98440265c4812",
+    "sig": "55c3ed7869a55a9c3a6228d8274da3b39051cf4407d796f80c48274d2441b2ea3b51be6016e0b0f3801751d695e6c16b93fec26fa48a443bb6d12f1f66b79c0f"
+  },
+  {
+    "id": 40,
+    "ts": "2026-11-11T16:24:24.358340+00:00",
+    "action": "token_used",
+    "role": "sender",
+    "prev_hash": "62920c0b4ec34ba780109a82f9fd4dff6e18578162cbc7b710f98440265c4812",
+    "hash": "ec12aa7e3893fa13f237ab13f1a7f63161facc5b154215b4456115766ca3c1d5",
+    "sig": "db8b5a9bbe3cb05ae90b251c63c2ea97960de58ae15962a316a6edbc263a974668c58627eaed3d82c627c5044a32e20e0f6e72bacba59714b89c4679e5306606"
+  },
+  {
+    "id": 41,
+    "ts": "2026-11-11T16:24:24.358547+00:00",
+    "action": "message_sent",
+    "role": "sender",
+    "prev_hash": "ec12aa7e3893fa13f237ab13f1a7f63161facc5b154215b4456115766ca3c1d5",
+    "hash": "891b1bf2ad5c6c4a05a69fbc42f53ad9f1a71ddbc3572cb09ec19e227c3899e7",
+    "sig": "0cf5b71c0b6f926b1090c07bddc51b31edc95a238134aec1f01e1209b74fd00138f9a0172285e2e8b28fb413065b6df6dd3fd645aaa8b851d5ab8eddaf63c403"
+  },
+  {
+    "id": 42,
+    "ts": "2026-11-11T16:24:24.489783+00:00",
+    "action": "token_used",
+    "role": "sender",
+    "prev_hash": "891b1bf2ad5c6c4a05a69fbc42f53ad9f1a71ddbc3572cb09ec19e227c3899e7",
+    "hash": "3810834609690ea1d08747c30af6af6e931bbbf5b9b09a9fbcf378d4141574c1",
+    "sig": "28dbf244eacf29f37caecb6d7c7ca0133b4ff35188b270aa417f2220f9898fa305031c7b853003aa2d47df5a79dff5f3ea0c9b98410327e529ebcb87e2d82c0e"
+  },
+  {
+    "id": 43,
+    "ts": "2026-11-11T16:24:24.489987+00:00",
+    "action": "message_sent",
+    "role": "sender",
+    "prev_hash": "3810834609690ea1d08747c30af6af6e931bbbf5b9b09a9fbcf378d4141574c1",
+    "hash": "9ba2428b60e912cf5539806c3692a31bde28f4a4a01a65b5993a37e7f762e7a5",
+    "sig": "3fc9e13cb8332d5680574a125459071cf63c23f00f631ce38365ac702f6f4991653b18b144777e4b5212c47d6594d7b12d192c4bb4e440dd71e5d769eefa1706"
+  },
+  {
+    "id": 44,
+    "ts": "2026-11-11T16:24:24.623184+00:00",
+    "action": "token_rejected",
+    "role": "sender",
+    "prev_hash": "9ba2428b60e912cf5539806c3692a31bde28f4a4a01a65b5993a37e7f762e7a5",
+    "hash": "17e7bd06cf2b9cb94a00cdaa694b0a9348174807c6efbe4a8b41d3332dc5bc20",
+    "sig": "670019a98721397987f3437dd5a6df9ae3165f2daa45b1468deb3321a5359371e5dcd764375a7d25f1a90c85610ec5c0902b1f37793de1be0929817312435009"
+  },
+  {
+    "id": 45,
+    "ts": "2026-11-11T16:24:24.632907+00:00",
+    "action": "round_closed",
+    "role": "admin",
+    "prev_hash": "17e7bd06cf2b9cb94a00cdaa694b0a9348174807c6efbe4a8b41d3332dc5bc20",
+    "hash": "0542dc83defcc835e1abe5f5593013f3422e5cc8a7561566289691ad9172cd7c",
+    "sig": "44c51cf291094275ff5eed5ab0b61dc9fa3d3f661d7044fade7d5937b98cf55e4e058e6d7796b08c8ddded369f7665c092fe150e3fdb90d751cb054e567e2402"
+  },
+  {
+    "id": 46,
+    "ts": "2026-11-11T16:24:24.633026+00:00",
+    "action": "round_opened",
+    "role": "admin",
+    "prev_hash": "0542dc83defcc835e1abe5f5593013f3422e5cc8a7561566289691ad9172cd7c",
+    "hash": "248f7d7b74f55436cb58850918525ed95b1b0adcffa540c4ecded6fdd09398c1",
+    "sig": "fa2149ebaa108d167c7bec8205b666602955cb293cd0a115e8b9487145167188000212620b52d406f017b484b698b68517ff69773afea891183c6a6ab993b60c"
+  },
+  {
+    "id": 47,
+    "ts": "2026-11-11T16:24:24.767461+00:00",
+    "action": "token_used",
+    "role": "sender",
+    "prev_hash": "248f7d7b74f55436cb58850918525ed95b1b0adcffa540c4ecded6fdd09398c1",
+    "hash": "39e73ec6d7b6bf9cbfdac4bc7e68981aa1cd7c49f010caee910e38ebf70b71ac",
+    "sig": "4db27ca98dd6108d6ddf40e003d381b7218c45c741f49721e125728a7fa91ed1a0fc9e948b8fd1c4906744a4e8d307079ebdf5bc50cbb55ee1b3926add466f0d"
+  },
+  {
+    "id": 48,
+    "ts": "2026-11-11T16:24:24.767665+00:00",
+    "action": "message_sent",
+    "role": "sender",
+    "prev_hash": "39e73ec6d7b6bf9cbfdac4bc7e68981aa1cd7c49f010caee910e38ebf70b71ac",
+    "hash": "7da6c6e90aff3eab437331313e9918f29e1e855cd785c085d33de02b7bc3a833",
+    "sig": "9aa4821ef2bccde76e6dfebf5acf5def2726747c10e4f22728f932b91e8aca7a2a257999b023e8c39860d4af952ec81306bc70bc8e320d8cd3de1e7d4df90b0c"
+  },
+  {
+    "id": 49,
+    "ts": "2026-11-11T16:24:24.901454+00:00",
+    "action": "token_used",
+    "role": "sender",
+    "prev_hash": "7da6c6e90aff3eab437331313e9918f29e1e855cd785c085d33de02b7bc3a833",
+    "hash": "95219c53c98da5e1591b7d8591986287c51df9ea1e5b3956e7fa4d69303e5074",
+    "sig": "8e183ffc03f134468f2acb863c97852f9349539e3e871a1c447edfb9eeed43e902a8f54e503141635dfb54cfc93ba4083341010930d0ad24f63d0930919da20d"
+  },
+  {
+    "id": 50,
+    "ts": "2026-11-11T16:24:24.901663+00:00",
+    "action": "message_sent",
+    "role": "sender",
+    "prev_hash": "95219c53c98da5e1591b7d8591986287c51df9ea1e5b3956e7fa4d69303e5074",
+    "hash": "1d10926b58fc1971438c44125026889fb3abc319267e0822b8f68002b91d60c4",
+    "sig": "5ba8bf2de0204491288724fce6936c4843fc2daba25c0bdaab457efebc15dd0dfac6a6c4ab4fb4a807f4973b60027267f421704acdf17e2be206eaff8bb95303"
+  },
+  {
+    "id": 51,
+    "ts": "2026-11-11T16:24:25.030093+00:00",
+    "action": "token_used",
+    "role": "sender",
+    "prev_hash": "1d10926b58fc1971438c44125026889fb3abc319267e0822b8f68002b91d60c4",
+    "hash": "da46012a8a07137fed116cbbff84d8416e1e1f8e123d139f9943cab6f131e86d",
+    "sig": "0f211d2bcf16f6ec2dc5aaa97421f0ab4161f311fb05e3286fd502d75dc14e4fd8aab5f3601130f3027536b316886a4ca2e91c71bd34dee0b18bc6856b00a106"
+  },
+  {
+    "id": 52,
+    "ts": "2026-11-11T16:24:25.030299+00:00",
+    "action": "message_sent",
+    "role": "sender",
+    "prev_hash": "da46012a8a07137fed116cbbff84d8416e1e1f8e123d139f9943cab6f131e86d",
+    "hash": "36555151a44a0a8634f9f68e7ef2410ffcaefb8acb6b469ad536d673d1487a11",
+    "sig": "39b8e8d0e96a926e0675b97feb765b997a974ea82051bcd701356e004885b3fb926012dc973bc77f131810a43fabac3e169dd070ebedde819381879a254a2100"
+  },
+  {
+    "id": 53,
+    "ts": "2026-11-11T16:24:25.074616+00:00",
+    "action": "login",
+    "role": "recipient",
+    "prev_hash": "36555151a44a0a8634f9f68e7ef2410ffcaefb8acb6b469ad536d673d1487a11",
+    "hash": "f21467ae25aa5ce1b83f8c2f489a2bc62bd5acbe6c53bb318a65d4a6bd92e2e9",
+    "sig": "52d643a4a59b7e3bd473db80e5c1acafc7ad8998952f2cb997e4919645f0ccdf34ad2e0cf9584e76df8125dc01f72a6507235c2caab1aa9d62ef2c39efb2ac00"
+  },
+  {
+    "id": 54,
+    "ts": "2026-11-11T16:24:25.193031+00:00",
+    "action": "message_delivered",
+    "role": "recipient",
+    "prev_hash": "f21467ae25aa5ce1b83f8c2f489a2bc62bd5acbe6c53bb318a65d4a6bd92e2e9",
+    "hash": "145c809147ab9c807a090871780a85cced41f1eea29996f1199805176a253c2c",
+    "sig": "c17fd587c104eb3e5073076f4d54414c1ac351ab3ade7a4761e98db1f4502263c01226e02b51e6205f8edb980186d0075fff5f414dd058804421e34103f84805"
+  },
+  {
+    "id": 55,
+    "ts": "2026-11-11T16:24:25.193181+00:00",
+    "action": "message_delivered",
+    "role": "recipient",
+    "prev_hash": "145c809147ab9c807a090871780a85cced41f1eea29996f1199805176a253c2c",
+    "hash": "43ce849f070a3ba7ecf682a125bbc3d4bce7b9643b0d06ba1eea504ece08acb8",
+    "sig": "5ae4ca1288bb046e0bdc312a0bbcdb04bd7d14132f4fced3596e9ced284bac47fe4ff2d5f784b8c06136cdad3ab78b3d0b1e066f0d68f41d53dfcb1c14b2a00b"
+  },
+  {
+    "id": 56,
+    "ts": "2026-11-11T16:24:25.193222+00:00",
+    "action": "message_delivered",
+    "role": "recipient",
+    "prev_hash": "43ce849f070a3ba7ecf682a125bbc3d4bce7b9643b0d06ba1eea504ece08acb8",
+    "hash": "976682b35692b5c3f69d6ee2a53bbb709308fe9f46b374421a93704c9d29ea87",
+    "sig": "58e44d2d06eee2aabe8a0c939072be8830432a087ee5ac8ab8ee35664bc0a8272ddf5e2f40701cf265e26c25afa1aba36b1a4fb71743653421dc093dc8222e0d"
+  },
+  {
+    "id": 57,
+    "ts": "2026-11-11T16:24:25.193259+00:00",
+    "action": "message_delivered",
+    "role": "recipient",
+    "prev_hash": "976682b35692b5c3f69d6ee2a53bbb709308fe9f46b374421a93704c9d29ea87",
+    "hash": "3ea37e195577a92111c6f54ba45f67ddb710be57fdc7f984e9e54fb1dbc0a68f",
+    "sig": "2552b85c29344c5a504d1d44b9581d05750d035939e0d516e4d766aa0b161dbb5f2667b498d2f651e2f99aa9057f71c19893914a9ab8aa77093a6ee04bc50e02"
+  },
+  {
+    "id": 58,
+    "ts": "2026-11-11T16:24:25.193294+00:00",
+    "action": "message_delivered",
+    "role": "recipient",
+    "prev_hash": "3ea37e195577a92111c6f54ba45f67ddb710be57fdc7f984e9e54fb1dbc0a68f",
+    "hash": "7198d4a98b9636ceef67dbe39ebb17bbf68c62169e82f373744b73a27d4afd1f",
+    "sig": "69de7a57034ad0dff9b324f2719f07be54a650b93f811d393643ad270ce08d95f3e6ebf82c1e01becd784911afd70c9d1615938def757e88b72168cf8258ca03"
+  },
+  {
+    "id": 59,
+    "ts": "2026-11-11T16:24:25.256226+00:00",
+    "action": "login",
+    "role": "recipient",
+    "prev_hash": "7198d4a98b9636ceef67dbe39ebb17bbf68c62169e82f373744b73a27d4afd1f",
+    "hash": "2f7aa61582469941cbd31763425cf6ff026b0c71d8a1142a6402d61da0b1745e",
+    "sig": "88b546c60c366a7832a9f524ab285c7d5a36d08ad7919926a455a8419a2af1dd25481f4e0879ede3eb58ee6ca96953807a5c3d4f34c14bb2a1c06caad64d2f02"
+  },
+  {
+    "id": 60,
+    "ts": "2026-11-11T16:24:25.377433+00:00",
+    "action": "message_delivered",
+    "role": "recipient",
+    "prev_hash": "2f7aa61582469941cbd31763425cf6ff026b0c71d8a1142a6402d61da0b1745e",
+    "hash": "163b487c5b79000fb1956980dc3d7fcb960dcb0226409d2ce31770bdb89bfc24",
+    "sig": "722290fa3d917fcce6482eb2468b8e066c9330aac1ba2b137ff1212a294b1017f524bece861f3f6103627e9dc1b537495cfbfe1f0adc8eca7e7bbffd1421440b"
+  },
+  {
+    "id": 61,
+    "ts": "2026-11-11T16:24:25.518978+00:00",
+    "action": "message_flagged",
+    "role": "recipient",
+    "prev_hash": "163b487c5b79000fb1956980dc3d7fcb960dcb0226409d2ce31770bdb89bfc24",
+    "hash": "32d25fced2d1f34cbaa8025380b1b5b9dd492846941a905937fc76e50a779760",
+    "sig": "21f559c181ce3a8ecf58762f16f1a33ea22c0b485e4979ed8c2a2e52ad8d0c66ec6edab9afd316c6616ba3ac4254739a7056304059e826e004c5cad26c244403"
+  },
+  {
+    "id": 62,
+    "ts": "2026-11-11T16:24:25.656614+00:00",
+    "action": "message_flagged",
+    "role": "recipient",
+    "prev_hash": "32d25fced2d1f34cbaa8025380b1b5b9dd492846941a905937fc76e50a779760",
+    "hash": "da988fece8f8fa93d1d0c105ee4e83149b4e1fdde30aa801a09535bfa86cb1b2",
+    "sig": "a3c92aab76ca85a58d8cf471918f7ec791f3e3ada5e42a014013d6b18117abf9a1fb94a07257a2997f0531c49739d0a489505a5c9bbb4f6c3339f5f19d575a02"
+  },
+  {
+    "id": 63,
+    "ts": "2026-11-11T16:24:25.796290+00:00",
+    "action": "message_flagged",
+    "role": "recipient",
+    "prev_hash": "da988fece8f8fa93d1d0c105ee4e83149b4e1fdde30aa801a09535bfa86cb1b2",
+    "hash": "5aca4c48cf53fc2a4e67e7634a5a108d065c368fc4fa2bb3128113e9f128e9bc",
+    "sig": "21bdec045221107c6fb930e123d03ea4a21cd50d08a85ee7a3f23b8634804cc85c067384ca352a21dd8c71748e92803fe06aeb20f6626eb62f80b6de14d47b06"
+  },
+  {
+    "id": 64,
+    "ts": "2026-11-11T16:24:25.931432+00:00",
+    "action": "message_flagged",
+    "role": "recipient",
+    "prev_hash": "5aca4c48cf53fc2a4e67e7634a5a108d065c368fc4fa2bb3128113e9f128e9bc",
+    "hash": "c4cd4bead682a9e38657ba4f3ad0ced777d636838a31ba05e76a01fcb0d92496",
+    "sig": "bd8bd59204c37d060c387342e2e3fe7a55f705fb0c8cbc23749a01b0fc293ab4c5208efc3eca133cd34915a5e981310a1c563dc43a3100dbb116fd428f4bcd00"
+  },
+  {
+    "id": 65,
+    "ts": "2026-11-11T16:24:26.185796+00:00",
+    "action": "message_flagged",
+    "role": "recipient",
+    "prev_hash": "c4cd4bead682a9e38657ba4f3ad0ced777d636838a31ba05e76a01fcb0d92496",
+    "hash": "ce7b9974aff644a98b9de3c3aeb637f95b340e71df8b9064684f636d12b5fe45",
+    "sig": "b94767ec0460697835cfeebb8ff90da53a0e59988501d0622e23e7932502326530f7a8453ad443e3e0fd8cf526bec2922f091618cde104e7eca8325a84596302"
+  },
+  {
+    "id": 66,
+    "ts": "2026-11-11T16:24:26.186740+00:00",
+    "action": "alert_flag_threshold",
+    "role": "system",
+    "prev_hash": "ce7b9974aff644a98b9de3c3aeb637f95b340e71df8b9064684f636d12b5fe45",
+    "hash": "02196695da1517710e0f9bf76e1e1013cc18723d10572475a71f352b4bc29798",
+    "sig": "b8f8273b1d0447ef1a516e955e786fa10a3fae245f4b9d57fc53e785a5ccc864e752a2616c91b3b8c0f10c4d24b78f1bda61933be3b2864ae94e7ff1a4d5f10b"
+  },
+  {
+    "id": 67,
+    "ts": "2026-11-11T16:24:26.244421+00:00",
+    "action": "login",
+    "role": "moderator",
+    "prev_hash": "02196695da1517710e0f9bf76e1e1013cc18723d10572475a71f352b4bc29798",
+    "hash": "a7b7ec81cd1343190d8d8398a8177ca357c701f8c880c0bed7f902bcdb37737d",
+    "sig": "b7f60965c0a1eaca7f3d701bbcf1678ab21afc853a9b57e749f97d205f2d80aa98922ce0d7f0e95e1e21c277f0e6448ff0e0b5741e773197bdfda5544fdfee08"
+  },
+  {
+    "id": 68,
+    "ts": "2026-11-11T16:24:26.372859+00:00",
+    "action": "flags_reviewed",
+    "role": "moderator",
+    "prev_hash": "a7b7ec81cd1343190d8d8398a8177ca357c701f8c880c0bed7f902bcdb37737d",
+    "hash": "8e75ebeb2d34f52f376cfd6641a8eeb24605882652b4134c1dfc99b1c68498ef",
+    "sig": "9efb0acd290974962755ff913e902406bd5057c4359b0966439a41b7dcf0b1b926c7e6f1adb05dd117756dc07304304ff4b1b7b4afc9da3ca72a3dbf7f6c5705"
+  },
+  {
+    "id": 69,
+    "ts": "2026-11-11T16:24:26.395896+00:00",
+    "action": "audit_viewed",
+    "role": "moderator",
+    "prev_hash": "8e75ebeb2d34f52f376cfd6641a8eeb24605882652b4134c1dfc99b1c68498ef",
+    "hash": "097b9cd0603bb8df39fb45764b4ba557360aa6b33973fd7768ced5688f62da2c",
+    "sig": "b08039ac4ee56693a967bb718b387c6f07f10658260a5997ef9e8738ba553981a1c766720cae410386b7a71b97041993bd3e869278153e168c496e743e874c06"
+  },
+  {
+    "id": 70,
+    "ts": "2026-11-11T16:24:26.519301+00:00",
+    "action": "flags_reviewed",
+    "role": "moderator",
+    "prev_hash": "097b9cd0603bb8df39fb45764b4ba557360aa6b33973fd7768ced5688f62da2c",
+    "hash": "1399a0ef29c611ae1f2142ef84d6411b4a8cddcd0d1adb1473d26bf1e46747a2",
+    "sig": "8bdb50a443e5d20620878cc3c6d95ff7d5ad38daf0b2d88bee76b2b1df3c992f0d6f231a08681e9fe95475ce7b717dd614c2ef2775254014b8a614cccee0700e"
+  },
+  {
+    "id": 71,
+    "ts": "2026-11-11T16:24:26.546761+00:00",
+    "action": "token_frozen",
+    "role": "moderator",
+    "prev_hash": "1399a0ef29c611ae1f2142ef84d6411b4a8cddcd0d1adb1473d26bf1e46747a2",
+    "hash": "b27a915eebf538378dad8ad86cfc45fd553ea45f8f6d2ab2f47e4dea9c6839fd",
+    "sig": "20bc66991e59d58ec53effc0cf960703d9fc613fbbd8e945007f5eac15bd402d6c5b35ed6e8eacfdd8e72de0e76004d3a5693d875e7f5caa0d949c5b535b530b"
+  },
+  {
+    "id": 72,
+    "ts": "2026-11-11T16:24:26.664209+00:00",
+    "action": "flags_reviewed",
+    "role": "moderator",
+    "prev_hash": "b27a915eebf538378dad8ad86cfc45fd553ea45f8f6d2ab2f47e4dea9c6839fd",
+    "hash": "a26aba88bf908ed2212d48198f325dfa57fc7c3e073044e9ce2be407c5228abe",
+    "sig": "a2310053eb1663543b058a8b5c0659882ba87343dfdafb70e34ff20277fe1186be23106b3776adc3d65134f01d0a677eb40068128bd02e801073fc75e87e9b03"
+  },
+  {
+    "id": 73,
+    "ts": "2026-11-11T16:24:26.717083+00:00",
+    "action": "token_frozen",
+    "role": "moderator",
+    "prev_hash": "a26aba88bf908ed2212d48198f325dfa57fc7c3e073044e9ce2be407c5228abe",
+    "hash": "e7ca92ea2715fbb26302708b8858ddc958e03a188e7f96708fcac11c8425b3f7",
+    "sig": "7bfb8876d41b25048925d5d962ede846c4b8f296b3fba2c808af1a89d34b267ef089faa683039a2ea2bb9f0c628e03c74e79e33c72fbb931f5861e72412ac501"
+  },
+  {
+    "id": 74,
+    "ts": "2026-11-11T16:24:26.831228+00:00",
+    "action": "flags_reviewed",
+    "role": "moderator",
+    "prev_hash": "e7ca92ea2715fbb26302708b8858ddc958e03a188e7f96708fcac11c8425b3f7",
+    "hash": "aa951d8418a360f5e61b5f1e8570c2209741d15ac5214adc7e74c777d4d853e1",
+    "sig": "135ff11eaf3a78d333f6fc5867715204fc93ece5bd357af9d364aa1101f4f8739a797c45482f2a7e16d2fa69e47fa5847e15cc5bd1107825a4b89752ca60e50b"
+  },
+  {
+    "id": 75,
+    "ts": "2026-11-11T16:24:26.852978+00:00",
+    "action": "token_frozen",
+    "role": "moderator",
+    "prev_hash": "aa951d8418a360f5e61b5f1e8570c2209741d15ac5214adc7e74c777d4d853e1",
+    "hash": "cada0cbe4d10008b585360bd65d0a7b5fa76992d2a2e940d6b3580154c9a78a9",
+    "sig": "814308d9f7e2d5a03a9f7dc38902b8b9fd573f314ab6939ca15544b0eee866b48eaa6b82102e769f364c2faa517bfc0b71b39bb11617a6788bab9ef9d976fd06"
+  },
+  {
+    "id": 76,
+    "ts": "2026-11-11T16:24:26.853246+00:00",
+    "action": "alert_freeze_threshold",
+    "role": "system",
+    "prev_hash": "cada0cbe4d10008b585360bd65d0a7b5fa76992d2a2e940d6b3580154c9a78a9",
+    "hash": "de4486fc4694f266935b765c8af942f3d7aefb5ea200f8d7847da23a18c231ee",
+    "sig": "7effb619f5c4790453b95f7c6e7dfb0bb1c82260d5cfde3880191556963c4d549039d24a844b749f0fd911bce77cda8cd0d9e7a04b5ffe1e05d9521049373308"
+  },
+  {
+    "id": 77,
+    "ts": "2026-11-11T16:24:26.862699+00:00",
+    "action": "flag_dismissed",
+    "role": "moderator",
+    "prev_hash": "de4486fc4694f266935b765c8af942f3d7aefb5ea200f8d7847da23a18c231ee",
+    "hash": "9a154001dcdc60c77a32b01edf5e9603252eadad37a46efd363b61165736f5fb",
+    "sig": "adecea7eb3e29e83149ebb6f58f251d995ebf78f509317eb5c466cdd8078983ecb590ad73adf8a3949128fa8699de971e1bbc696358c3ad9d80459be75983b0b"
+  },
+  {
+    "id": 78,
+    "ts": "2026-11-11T16:24:26.875114+00:00",
+    "action": "flag_dismissed",
+    "role": "moderator",
+    "prev_hash": "9a154001dcdc60c77a32b01edf5e9603252eadad37a46efd363b61165736f5fb",
+    "hash": "e079d6ae8062275f61008e9278605a8aed51b8e8a8ec331a61b122572089176c",
+    "sig": "b250752de6edbc1b12ac14f5b969ff27c63fd3d0e51f772e878251a091424f9a0889c342a3d728dad00a502421827ea760921cf28973da6f7f5b4f0f61dfbb0c"
+  },
+  {
+    "id": 79,
+    "ts": "2026-11-11T16:24:26.883987+00:00",
+    "action": "round_closed",
+    "role": "admin",
+    "prev_hash": "e079d6ae8062275f61008e9278605a8aed51b8e8a8ec331a61b122572089176c",
+    "hash": "61d9d8adabf928f5a323fe7cc83fb4dae120b247e32dc04b3293e9f788041ffa",
+    "sig": "862949663cf9923f7dedc489f77a23382018432f6d55b4cfaeb5cb7645ec49944066e8c71335d967dbc5b1843f50fbff343f2c405743c9098e3e93868479b706"
+  },
+  {
+    "id": 80,
+    "ts": "2026-11-11T16:24:26.884138+00:00",
+    "action": "round_opened",
+    "role": "admin",
+    "prev_hash": "61d9d8adabf928f5a323fe7cc83fb4dae120b247e32dc04b3293e9f788041ffa",
+    "hash": "568445415c38023eedd77cec0ab146bd5c0fbd5abe97e5682e42e982c937b643",
+    "sig": "47b35e0a331c79f967fb3536a72de1d2c060bcad244bb4579f68a04aae427bb39d970002f8bc17c36c9220744e4649375c8019ae3c059943b973deb56a4b5000"
+  },
+  {
+    "id": 81,
+    "ts": "2026-11-11T16:24:27.011986+00:00",
+    "action": "token_rejected",
+    "role": "sender",
+    "prev_hash": "568445415c38023eedd77cec0ab146bd5c0fbd5abe97e5682e42e982c937b643",
+    "hash": "34c7ac803ee7a486df48cc03823574ffcf43677ccecdc50803e090276956a11b",
+    "sig": "7b909e70ba5cc25455307523cdb84f7373e14226d466f9f193cf487c98ce992334361ee15ac6196c842d4663201e4ddf13428caaa6098bd3fb996e52256b0e0b"
+  },
+  {
+    "id": 82,
+    "ts": "2026-11-11T16:24:27.020189+00:00",
+    "action": "round_closed",
+    "role": "admin",
+    "prev_hash": "34c7ac803ee7a486df48cc03823574ffcf43677ccecdc50803e090276956a11b",
+    "hash": "307a6556195bf866359139886756f0b3c458eb5dc70018f72dfc6b45a8bf03be",
+    "sig": "4be5e48cdce97714440c47f9572bcde42ff749eaf2202b480dca96cb8172b10c2632596af61c656215561846ae084061648639ae1a8b77e684760830ef36e400"
+  },
+  {
+    "id": 83,
+    "ts": "2026-11-11T16:24:27.028592+00:00",
+    "action": "audit_viewed",
+    "role": "moderator",
+    "prev_hash": "307a6556195bf866359139886756f0b3c458eb5dc70018f72dfc6b45a8bf03be",
+    "hash": "aab8bb2bb48dbd3bc76fce190becff273451881c9a6c3dbdfc89ab912014fd12",
+    "sig": "93397514d0d984f7ef0fc1ccb2583efe0fdfecadb1239ae481c0e6408179b9f6bb5c76e489563e2bee5932e4784cb551b72308f30eaa4454ca340082df4d7606"
+  },
+  {
+    "id": 84,
+    "ts": "2026-11-11T16:24:27.048962+00:00",
+    "action": "audit_viewed",
+    "role": "admin",
+    "prev_hash": "aab8bb2bb48dbd3bc76fce190becff273451881c9a6c3dbdfc89ab912014fd12",
+    "hash": "9e7e21e4559b9d821973ee5b0f4c0b92dfbe38a57efd6bb3769ea000ff87f449",
+    "sig": "1452b698b72b7dbb45df69fcc60c63dfc2515a37f1e9ff2e6ec8aa5bf8d499f714d9d53d11e749e4855fbadb87431bb5879b35f1e5d54098662dfaad07800c02"
+  }
+]
