@@ -73,15 +73,23 @@ CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit_log
 """
 
 
+class _Connection(sqlite3.Connection):
+    pass  # unlike sqlite3.Connection, accepts extra attributes (after_commit)
+
+
 @contextmanager
 def tx():
-    """Open a connection, run everything inside one transaction, then close."""
-    conn = sqlite3.connect(os.environ.get("WC_DB", "whisperchain.db"))
+    """Open a connection, run everything inside one transaction, then close.
+    Callbacks in conn.after_commit run only if the transaction committed."""
+    conn = sqlite3.connect(os.environ.get("WC_DB", "whisperchain.db"), factory=_Connection)
+    conn.after_commit = []
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     try:
         with conn:
             yield conn
+        for callback in conn.after_commit:
+            callback()
     finally:
         conn.close()
 

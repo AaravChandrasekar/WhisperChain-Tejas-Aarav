@@ -1,0 +1,396 @@
+# --- Phase 1: registration and account administration ---
+
+$ python client.py -u root login
+Logged in as root (admin).
+
+$ python client.py -u ria register --roles recipient
+Registered ria; waiting for an admin to approve.
+Your key fingerprint: a9ed56204589b136
+
+$ python client.py -u kai register --roles recipient
+Registered kai; waiting for an admin to approve.
+Your key fingerprint: 029680bb8894380d
+
+$ python client.py -u moe register --roles moderator
+Registered moe; waiting for an admin to approve.
+Your key fingerprint: f7c07a3d2daa187d
+
+$ python client.py -u sol register --roles sender
+Registered sol; waiting for an admin to approve.
+Your key fingerprint: 6bfd54cfafc247e4
+
+$ python client.py -u ana register --roles sender
+Registered ana; waiting for an admin to approve.
+Your key fingerprint: bafb52cf750cc9e3
+
+$ python client.py -u ben register --roles sender
+Registered ben; waiting for an admin to approve.
+Your key fingerprint: 8f55b4e98c181ecb
+
+$ python client.py -u eve register --roles sender
+Registered eve; waiting for an admin to approve.
+Your key fingerprint: 15d41a623415d3f1
+
+$ python client.py -u zed register --roles sender
+Registered zed; waiting for an admin to approve.
+Your key fingerprint: a16e42a554bd707b
+
+$ python client.py -u root pending
+ana: sender
+ben: sender
+eve: sender
+kai: recipient
+moe: moderator
+ria: recipient
+sol: sender
+zed: sender
+
+$ python client.py -u root approve ria
+Approved ria.
+
+$ python client.py -u root approve kai
+Approved kai.
+
+$ python client.py -u root approve moe
+Approved moe.
+
+$ python client.py -u root approve sol
+Approved sol.
+
+$ python client.py -u root approve ana
+Approved ana.
+
+$ python client.py -u root approve ben
+Approved ben.
+
+$ python client.py -u root approve eve
+Approved eve.
+
+$ python client.py -u root approve zed
+Approved zed.
+
+# API PUT /admin/users/zed/roles as root -> {"username": "zed", "roles": ["recipient", "sender"]}
+
+# API POST /admin/users/eve/revoke as root -> {"username": "eve", "status": "revoked"}
+
+# --- Failed login attempts: wrong password, then the revoked account ---
+
+$ python client.py -u sol login
+error: 401: Invalid credentials or account not active
+[exit 1]
+
+$ python client.py -u eve login
+error: 401: Invalid credentials or account not active
+[exit 1]
+
+# --- Phase 2: round 1 - anonymous credentials and messages ---
+
+$ python client.py -u root open-round
+Round 1 is open.
+
+$ python client.py -u sol login
+Logged in as sol (sender).
+
+$ python client.py -u sol credential
+Got your anonymous sender credential. The server can't link it to you.
+
+$ python client.py -u ana login
+Logged in as ana (sender).
+
+$ python client.py -u ana credential
+Got your anonymous sender credential. The server can't link it to you.
+
+$ python client.py -u ben login
+Logged in as ben (sender).
+
+$ python client.py -u ben credential
+Got your anonymous sender credential. The server can't link it to you.
+
+$ python client.py -u sol send ria "You are a worthless idiot"
+Sent anonymously to ria (round 1).
+
+$ python client.py -u ana send ria "Nobody wants you here"
+Sent anonymously to ria (round 1).
+
+$ python client.py -u ben send ria "Your presentation was terrible and so are you"
+Sent anonymously to ria (round 1).
+
+# --- Replay: sol tries a second message in the same round ---
+
+$ python client.py -u sol send kai "Great job today!"
+error: 409: Token already used this round
+[exit 1]
+
+# --- Phase 3: round 2 (opening it closes round 1) ---
+
+$ python client.py -u root open-round
+Round 2 is open.
+
+$ python client.py -u sol send ria "Still a loser"
+Sent anonymously to ria (round 2).
+
+$ python client.py -u ana send ria "Thanks for helping me with the lab!"
+Sent anonymously to ria (round 2).
+
+$ python client.py -u ben send kai "Your talk was really inspiring"
+Sent anonymously to kai (round 2).
+
+# --- Phase 4: recipients read and flag ---
+
+$ python client.py -u ria login
+Logged in as ria (recipient).
+
+$ python client.py -u ria inbox
+[4d2498a196205231e2edb3fa132df7cd] round 1, from a verified anonymous sender:
+    Nobody wants you here
+[9840d15ece165b4f04de6c07072c825b] round 1, from a verified anonymous sender:
+    Your presentation was terrible and so are you
+[9fd88ede6a748bc6f87e1ef3f55c468c] round 1, from a verified anonymous sender:
+    You are a worthless idiot
+[cdd5016c7026527840ddcdfcaa294cc3] round 2, from a verified anonymous sender:
+    Thanks for helping me with the lab!
+[e8a08774b6b53072dc45a4cc4832e985] round 2, from a verified anonymous sender:
+    Still a loser
+
+$ python client.py -u kai login
+Logged in as kai (recipient).
+
+$ python client.py -u kai inbox
+[6706229fa97bf77209c50dd303da3400] round 2, from a verified anonymous sender:
+    Your talk was really inspiring
+
+$ python client.py -u ria flag 9fd88ede6a748bc6f87e1ef3f55c468c
+Flagged 9fd88ede6a748bc6f87e1ef3f55c468c for moderators.
+
+$ python client.py -u ria flag 4d2498a196205231e2edb3fa132df7cd
+Flagged 4d2498a196205231e2edb3fa132df7cd for moderators.
+
+$ python client.py -u ria flag 9840d15ece165b4f04de6c07072c825b
+Flagged 9840d15ece165b4f04de6c07072c825b for moderators.
+
+$ python client.py -u ria flag e8a08774b6b53072dc45a4cc4832e985
+Flagged e8a08774b6b53072dc45a4cc4832e985 for moderators.
+
+$ python client.py -u ria flag cdd5016c7026527840ddcdfcaa294cc3
+Flagged cdd5016c7026527840ddcdfcaa294cc3 for moderators.
+
+# --- Phase 5: moderator review ---
+
+$ python client.py -u moe login
+Logged in as moe (moderator).
+
+$ python client.py -u moe dashboard
+Open flags: 5
+[9fd88ede6a748bc6f87e1ef3f55c468c] round 1, anonymous sender b68f602fffc8f29f (2 open flags):
+    You are a worthless idiot
+[4d2498a196205231e2edb3fa132df7cd] round 1, anonymous sender 39b667b5add14577 (2 open flags):
+    Nobody wants you here
+[9840d15ece165b4f04de6c07072c825b] round 1, anonymous sender 75f38b04a0f488ae (1 open flags):
+    Your presentation was terrible and so are you
+[e8a08774b6b53072dc45a4cc4832e985] round 2, anonymous sender b68f602fffc8f29f (2 open flags):
+    Still a loser
+[cdd5016c7026527840ddcdfcaa294cc3] round 2, anonymous sender 39b667b5add14577 (2 open flags):
+    Thanks for helping me with the lab!
+Alerts: 1
+  2026-11-11T16:24:26.186740+00:00  alert_flag_threshold
+
+$ python client.py -u moe freeze 9fd88ede6a748bc6f87e1ef3f55c468c
+Froze the anonymous sender of 9fd88ede6a748bc6f87e1ef3f55c468c; their future tokens will be refused.
+
+$ python client.py -u moe freeze 4d2498a196205231e2edb3fa132df7cd
+Froze the anonymous sender of 4d2498a196205231e2edb3fa132df7cd; their future tokens will be refused.
+
+$ python client.py -u moe freeze 9840d15ece165b4f04de6c07072c825b
+Froze the anonymous sender of 9840d15ece165b4f04de6c07072c825b; their future tokens will be refused.
+
+$ python client.py -u moe dismiss cdd5016c7026527840ddcdfcaa294cc3
+Dismissed the flag on cdd5016c7026527840ddcdfcaa294cc3.
+
+$ python client.py -u moe dismiss e8a08774b6b53072dc45a4cc4832e985
+Dismissed the flag on e8a08774b6b53072dc45a4cc4832e985.
+
+# --- Phase 6: round 3 - frozen sender is blocked ---
+
+$ python client.py -u root open-round
+Round 3 is open.
+
+$ python client.py -u sol send ria "You can't stop me"
+error: 403: Token frozen by a moderator
+[exit 1]
+
+# API POST /admin/rounds/close as root -> {"round": 3, "status": "closed"}
+
+# --- Phase 7: audit review ---
+
+$ python client.py -u moe audit
+Hash chain and signatures valid: True
+   1  2026-11-11T16:24:21.056342+00:00  admin_bootstrapped     admin
+   2  2026-11-11T16:24:21.702837+00:00  login                  admin
+   3  2026-11-11T16:24:21.882005+00:00  registration_requested recipient
+   4  2026-11-11T16:24:21.882143+00:00  key_registered         recipient
+   5  2026-11-11T16:24:21.998834+00:00  registration_requested recipient
+   6  2026-11-11T16:24:21.998971+00:00  key_registered         recipient
+   7  2026-11-11T16:24:22.115901+00:00  registration_requested moderator
+   8  2026-11-11T16:24:22.116031+00:00  key_registered         moderator
+   9  2026-11-11T16:24:22.308644+00:00  registration_requested sender
+  10  2026-11-11T16:24:22.308780+00:00  key_registered         sender
+  11  2026-11-11T16:24:22.651089+00:00  registration_requested sender
+  12  2026-11-11T16:24:22.651232+00:00  key_registered         sender
+  13  2026-11-11T16:24:22.997219+00:00  registration_requested sender
+  14  2026-11-11T16:24:22.997387+00:00  key_registered         sender
+  15  2026-11-11T16:24:23.179925+00:00  registration_requested sender
+  16  2026-11-11T16:24:23.180065+00:00  key_registered         sender
+  17  2026-11-11T16:24:23.253813+00:00  registration_requested sender
+  18  2026-11-11T16:24:23.253946+00:00  key_registered         sender
+  19  2026-11-11T16:24:23.273721+00:00  user_approved          admin
+  20  2026-11-11T16:24:23.285074+00:00  user_approved          admin
+  21  2026-11-11T16:24:23.294606+00:00  user_approved          admin
+  22  2026-11-11T16:24:23.305266+00:00  user_approved          admin
+  23  2026-11-11T16:24:23.313813+00:00  user_approved          admin
+  24  2026-11-11T16:24:23.324692+00:00  user_approved          admin
+  25  2026-11-11T16:24:23.334442+00:00  user_approved          admin
+  26  2026-11-11T16:24:23.344323+00:00  user_approved          admin
+  27  2026-11-11T16:24:23.353263+00:00  roles_changed          admin
+  28  2026-11-11T16:24:23.361886+00:00  user_revoked           admin
+  29  2026-11-11T16:24:23.406765+00:00  login_failed           unknown
+  30  2026-11-11T16:24:23.449952+00:00  login_failed           unknown
+  31  2026-11-11T16:24:23.460917+00:00  round_opened           admin
+  32  2026-11-11T16:24:23.503226+00:00  login                  sender
+  33  2026-11-11T16:24:23.641961+00:00  credential_issued      sender
+  34  2026-11-11T16:24:23.721938+00:00  login                  sender
+  35  2026-11-11T16:24:23.852331+00:00  credential_issued      sender
+  36  2026-11-11T16:24:23.934547+00:00  login                  sender
+  37  2026-11-11T16:24:24.065443+00:00  credential_issued      sender
+  38  2026-11-11T16:24:24.227965+00:00  token_used             sender
+  39  2026-11-11T16:24:24.228186+00:00  message_sent           sender
+  40  2026-11-11T16:24:24.358340+00:00  token_used             sender
+  41  2026-11-11T16:24:24.358547+00:00  message_sent           sender
+  42  2026-11-11T16:24:24.489783+00:00  token_used             sender
+  43  2026-11-11T16:24:24.489987+00:00  message_sent           sender
+  44  2026-11-11T16:24:24.623184+00:00  token_rejected         sender
+  45  2026-11-11T16:24:24.632907+00:00  round_closed           admin
+  46  2026-11-11T16:24:24.633026+00:00  round_opened           admin
+  47  2026-11-11T16:24:24.767461+00:00  token_used             sender
+  48  2026-11-11T16:24:24.767665+00:00  message_sent           sender
+  49  2026-11-11T16:24:24.901454+00:00  token_used             sender
+  50  2026-11-11T16:24:24.901663+00:00  message_sent           sender
+  51  2026-11-11T16:24:25.030093+00:00  token_used             sender
+  52  2026-11-11T16:24:25.030299+00:00  message_sent           sender
+  53  2026-11-11T16:24:25.074616+00:00  login                  recipient
+  54  2026-11-11T16:24:25.193031+00:00  message_delivered      recipient
+  55  2026-11-11T16:24:25.193181+00:00  message_delivered      recipient
+  56  2026-11-11T16:24:25.193222+00:00  message_delivered      recipient
+  57  2026-11-11T16:24:25.193259+00:00  message_delivered      recipient
+  58  2026-11-11T16:24:25.193294+00:00  message_delivered      recipient
+  59  2026-11-11T16:24:25.256226+00:00  login                  recipient
+  60  2026-11-11T16:24:25.377433+00:00  message_delivered      recipient
+  61  2026-11-11T16:24:25.518978+00:00  message_flagged        recipient
+  62  2026-11-11T16:24:25.656614+00:00  message_flagged        recipient
+  63  2026-11-11T16:24:25.796290+00:00  message_flagged        recipient
+  64  2026-11-11T16:24:25.931432+00:00  message_flagged        recipient
+  65  2026-11-11T16:24:26.185796+00:00  message_flagged        recipient
+  66  2026-11-11T16:24:26.186740+00:00  alert_flag_threshold   system
+  67  2026-11-11T16:24:26.244421+00:00  login                  moderator
+  68  2026-11-11T16:24:26.372859+00:00  flags_reviewed         moderator
+  69  2026-11-11T16:24:26.395896+00:00  audit_viewed           moderator
+  70  2026-11-11T16:24:26.519301+00:00  flags_reviewed         moderator
+  71  2026-11-11T16:24:26.546761+00:00  token_frozen           moderator
+  72  2026-11-11T16:24:26.664209+00:00  flags_reviewed         moderator
+  73  2026-11-11T16:24:26.717083+00:00  token_frozen           moderator
+  74  2026-11-11T16:24:26.831228+00:00  flags_reviewed         moderator
+  75  2026-11-11T16:24:26.852978+00:00  token_frozen           moderator
+  76  2026-11-11T16:24:26.853246+00:00  alert_freeze_threshold system
+  77  2026-11-11T16:24:26.862699+00:00  flag_dismissed         moderator
+  78  2026-11-11T16:24:26.875114+00:00  flag_dismissed         moderator
+  79  2026-11-11T16:24:26.883987+00:00  round_closed           admin
+  80  2026-11-11T16:24:26.884138+00:00  round_opened           admin
+  81  2026-11-11T16:24:27.011986+00:00  token_rejected         sender
+  82  2026-11-11T16:24:27.020189+00:00  round_closed           admin
+  83  2026-11-11T16:24:27.028592+00:00  audit_viewed           moderator
+
+$ python client.py -u root audit
+Hash chain and signatures valid: True
+   1  2026-11-11T16:24:21.056342+00:00  admin_bootstrapped     admin
+   2  2026-11-11T16:24:21.702837+00:00  login                  admin
+   3  2026-11-11T16:24:21.882005+00:00  registration_requested recipient
+   4  2026-11-11T16:24:21.882143+00:00  key_registered         recipient
+   5  2026-11-11T16:24:21.998834+00:00  registration_requested recipient
+   6  2026-11-11T16:24:21.998971+00:00  key_registered         recipient
+   7  2026-11-11T16:24:22.115901+00:00  registration_requested moderator
+   8  2026-11-11T16:24:22.116031+00:00  key_registered         moderator
+   9  2026-11-11T16:24:22.308644+00:00  registration_requested sender
+  10  2026-11-11T16:24:22.308780+00:00  key_registered         sender
+  11  2026-11-11T16:24:22.651089+00:00  registration_requested sender
+  12  2026-11-11T16:24:22.651232+00:00  key_registered         sender
+  13  2026-11-11T16:24:22.997219+00:00  registration_requested sender
+  14  2026-11-11T16:24:22.997387+00:00  key_registered         sender
+  15  2026-11-11T16:24:23.179925+00:00  registration_requested sender
+  16  2026-11-11T16:24:23.180065+00:00  key_registered         sender
+  17  2026-11-11T16:24:23.253813+00:00  registration_requested sender
+  18  2026-11-11T16:24:23.253946+00:00  key_registered         sender
+  19  2026-11-11T16:24:23.273721+00:00  user_approved          admin
+  20  2026-11-11T16:24:23.285074+00:00  user_approved          admin
+  21  2026-11-11T16:24:23.294606+00:00  user_approved          admin
+  22  2026-11-11T16:24:23.305266+00:00  user_approved          admin
+  23  2026-11-11T16:24:23.313813+00:00  user_approved          admin
+  24  2026-11-11T16:24:23.324692+00:00  user_approved          admin
+  25  2026-11-11T16:24:23.334442+00:00  user_approved          admin
+  26  2026-11-11T16:24:23.344323+00:00  user_approved          admin
+  27  2026-11-11T16:24:23.353263+00:00  roles_changed          admin
+  28  2026-11-11T16:24:23.361886+00:00  user_revoked           admin
+  29  2026-11-11T16:24:23.406765+00:00  login_failed           unknown
+  30  2026-11-11T16:24:23.449952+00:00  login_failed           unknown
+  31  2026-11-11T16:24:23.460917+00:00  round_opened           admin
+  32  2026-11-11T16:24:23.503226+00:00  login                  sender
+  33  2026-11-11T16:24:23.641961+00:00  credential_issued      sender
+  34  2026-11-11T16:24:23.721938+00:00  login                  sender
+  35  2026-11-11T16:24:23.852331+00:00  credential_issued      sender
+  36  2026-11-11T16:24:23.934547+00:00  login                  sender
+  37  2026-11-11T16:24:24.065443+00:00  credential_issued      sender
+  38  2026-11-11T16:24:24.227965+00:00  token_used             sender
+  39  2026-11-11T16:24:24.228186+00:00  message_sent           sender
+  40  2026-11-11T16:24:24.358340+00:00  token_used             sender
+  41  2026-11-11T16:24:24.358547+00:00  message_sent           sender
+  42  2026-11-11T16:24:24.489783+00:00  token_used             sender
+  43  2026-11-11T16:24:24.489987+00:00  message_sent           sender
+  44  2026-11-11T16:24:24.623184+00:00  token_rejected         sender
+  45  2026-11-11T16:24:24.632907+00:00  round_closed           admin
+  46  2026-11-11T16:24:24.633026+00:00  round_opened           admin
+  47  2026-11-11T16:24:24.767461+00:00  token_used             sender
+  48  2026-11-11T16:24:24.767665+00:00  message_sent           sender
+  49  2026-11-11T16:24:24.901454+00:00  token_used             sender
+  50  2026-11-11T16:24:24.901663+00:00  message_sent           sender
+  51  2026-11-11T16:24:25.030093+00:00  token_used             sender
+  52  2026-11-11T16:24:25.030299+00:00  message_sent           sender
+  53  2026-11-11T16:24:25.074616+00:00  login                  recipient
+  54  2026-11-11T16:24:25.193031+00:00  message_delivered      recipient
+  55  2026-11-11T16:24:25.193181+00:00  message_delivered      recipient
+  56  2026-11-11T16:24:25.193222+00:00  message_delivered      recipient
+  57  2026-11-11T16:24:25.193259+00:00  message_delivered      recipient
+  58  2026-11-11T16:24:25.193294+00:00  message_delivered      recipient
+  59  2026-11-11T16:24:25.256226+00:00  login                  recipient
+  60  2026-11-11T16:24:25.377433+00:00  message_delivered      recipient
+  61  2026-11-11T16:24:25.518978+00:00  message_flagged        recipient
+  62  2026-11-11T16:24:25.656614+00:00  message_flagged        recipient
+  63  2026-11-11T16:24:25.796290+00:00  message_flagged        recipient
+  64  2026-11-11T16:24:25.931432+00:00  message_flagged        recipient
+  65  2026-11-11T16:24:26.185796+00:00  message_flagged        recipient
+  66  2026-11-11T16:24:26.186740+00:00  alert_flag_threshold   system
+  67  2026-11-11T16:24:26.244421+00:00  login                  moderator
+  68  2026-11-11T16:24:26.372859+00:00  flags_reviewed         moderator
+  69  2026-11-11T16:24:26.395896+00:00  audit_viewed           moderator
+  70  2026-11-11T16:24:26.519301+00:00  flags_reviewed         moderator
+  71  2026-11-11T16:24:26.546761+00:00  token_frozen           moderator
+  72  2026-11-11T16:24:26.664209+00:00  flags_reviewed         moderator
+  73  2026-11-11T16:24:26.717083+00:00  token_frozen           moderator
+  74  2026-11-11T16:24:26.831228+00:00  flags_reviewed         moderator
+  75  2026-11-11T16:24:26.852978+00:00  token_frozen           moderator
+  76  2026-11-11T16:24:26.853246+00:00  alert_freeze_threshold system
+  77  2026-11-11T16:24:26.862699+00:00  flag_dismissed         moderator
+  78  2026-11-11T16:24:26.875114+00:00  flag_dismissed         moderator
+  79  2026-11-11T16:24:26.883987+00:00  round_closed           admin
+  80  2026-11-11T16:24:26.884138+00:00  round_opened           admin
+  81  2026-11-11T16:24:27.011986+00:00  token_rejected         sender
+  82  2026-11-11T16:24:27.020189+00:00  round_closed           admin
+  83  2026-11-11T16:24:27.028592+00:00  audit_viewed           moderator
+  84  2026-11-11T16:24:27.048962+00:00  audit_viewed           admin

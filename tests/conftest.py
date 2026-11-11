@@ -6,6 +6,7 @@ _tmp = tempfile.mkdtemp()
 os.environ["WC_DB"] = os.path.join(_tmp, "test.db")
 os.environ["WC_KEY"] = os.path.join(_tmp, "server_key.pem")
 os.environ["WC_AUDIT_KEY"] = os.path.join(_tmp, "audit_key.pem")
+os.environ["WC_AUDIT_HEAD"] = os.path.join(_tmp, "audit_head.json")
 
 from app.auth import hash_pw, set_roles  # noqa: E402
 from app.db import init_db, tx  # noqa: E402

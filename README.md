@@ -86,10 +86,11 @@ The dashboard verifies each report's credential and signature, so fake reports s
 Admins have no endpoint that returns messages, and no sender info is stored anywhere to leak.
 
 ## Audit logging
-Every major action appends an entry with a timestamp, action and role, never a username. The log is tamper-resistant in three layers:
+Every major action appends an entry with a timestamp, action and role, never a username. The log is tamper-resistant in four layers:
 1. **Append-only:** SQLite triggers reject any `UPDATE` or `DELETE` on the log.
 2. **Hash-chained:** each entry includes the hash of the previous one, so editing a past entry breaks every hash after it.
 3. **Signed:** the system's Ed25519 audit key (`audit_key.pem`, or `WC_AUDIT_KEY`) signs each entry's hash, so someone who can write to the database still can't recompute a valid chain without the key file.
+4. **Anchored:** the newest entry's id and hash are also kept outside the database (`audit_head.json`, or `WC_AUDIT_HEAD`), so deleting the newest entries is caught too. A log written before this existed is anchored once with `python -m app.audit`.
 
 `GET /audit` reports `chain_valid` (links and signatures), and viewing the log is itself logged.
 

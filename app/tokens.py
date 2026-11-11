@@ -55,7 +55,8 @@ def open_round(db) -> int:
 def start_round(_: dict = Depends(require("admin"))):
     """Close the current round (if any) and open a new one."""
     with tx() as db:
-        db.execute("UPDATE rounds SET closed_at = ? WHERE closed_at IS NULL", (now(),))
+        if db.execute("UPDATE rounds SET closed_at = ? WHERE closed_at IS NULL", (now(),)).rowcount:
+            audit(db, "round_closed", "admin")  # same event as an explicit close, so every round's end is logged
         rid = db.execute("INSERT INTO rounds (opened_at) VALUES (?)", (now(),)).lastrowid
         audit(db, "round_opened", "admin")
     return {"round": rid}

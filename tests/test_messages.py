@@ -1,10 +1,13 @@
 import os
+import shutil
+import sqlite3
 
 import pytest
 from helpers import ADMIN, KEYS, client, get_credential, make_token, new_user
 
 import whisper_crypto as wc
 from app import moderation
+from app.audit import audit, verify_chain
 from app.db import tx
 
 RECIPIENT = new_user("ria", ["recipient"])
@@ -142,3 +145,27 @@ def test_audit_log_access_and_events():
         delivered = db.execute("SELECT COUNT(*) FROM messages WHERE delivered = 1").fetchone()[0]
     assert actions.count("message_delivered") == delivered  # each logged once, however often inboxes are fetched
     assert "ria" not in str(log) and "sol" not in str(log)  # no identities
+
+def tampered_copy(tmp_path, *statements):
+    """A copy of the live database, edited by an attacker who drops the append-only triggers."""
+    path = tmp_path / "copy.db"
+    shutil.copy(os.environ["WC_DB"], path)
+    db = sqlite3.connect(path)
+    db.row_factory = sqlite3.Row
+    db.executescript("DROP TRIGGER audit_no_update; DROP TRIGGER audit_no_delete;" + "".join(statements))
+    return db
+
+
+def test_truncating_the_newest_entries_is_detected(tmp_path):
+    client.get("/audit", headers=ADMIN)  # make sure the log has entries and a head
+    assert verify_chain(tampered_copy(tmp_path))
+    cut = "DELETE FROM audit_log WHERE id > (SELECT MAX(id) - 3 FROM audit_log);"
+    assert not verify_chain(tampered_copy(tmp_path, cut))  # remaining chain links up, but the head is gone
+
+
+def test_missing_head_file_is_not_trusted(tmp_path, monkeypatch):
+    monkeypatch.setenv("WC_AUDIT_HEAD", str(tmp_path / "missing.json"))
+    with tx() as db:
+        assert not verify_chain(db)  # non-empty log, no head
+        audit(db, "login", "admin")
+    assert not (tmp_path / "missing.json").exists()  # a new entry doesn't quietly recreate the head
