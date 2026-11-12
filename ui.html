@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhisperChain+</title>
+<style>
+  :root { color-scheme: light dark; --line: #8885; --muted: #888; --ok: #2a7; --err: #d44; font: 15px system-ui, sans-serif; }
+  body { max-width: 760px; margin: 0 auto; padding: 16px; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  header h1 { font-size: 22px; margin: 0; flex: 1; }
+  section { border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
+  h2 { font-size: 16px; margin: 0 0 4px; }
+  p.hint { color: var(--muted); margin: 0 0 10px; font-size: 13px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+  input:not([type=checkbox]) { padding: 6px 8px; flex: 1; min-width: 120px; }
+  button { padding: 6px 12px; cursor: pointer; }
+  pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 13px; }
+  .item { border-top: 1px solid var(--line); padding: 8px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .item pre { flex: 1; min-width: 200px; }
+  .result { margin-top: 8px; }
+  .err { color: var(--err); }
+  #status { position: sticky; top: 0; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; color: #fff; display: none; white-space: pre-wrap; }
+  #status.ok { background: var(--ok); display: block; } #status.err { background: var(--err); display: block; color: #fff; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header><h1>WhisperChain+</h1><span id="who"></span><button id="signout" class="hidden" onclick="signOut()">Sign out</button></header>
+<div id="status"></div>
+
+<div id="signin">
+  <p class="hint">Each browser tab is signed in as its own user, so open one tab per person you want to play.</p>
+  <section>
+    <h2>Sign in</h2>
+    <div class="row"><input id="u" placeholder="username"><input id="p" type="password" placeholder="password">
+      <button onclick="signIn()">Sign in</button></div>
+    <p class="hint">The first admin is made on the command line: <code>python create_admin.py &lt;name&gt;</code></p>
+  </section>
+  <section>
+    <h2>Create an account</h2>
+    <p class="hint">Makes your key pair on this machine and asks an admin to approve you. Sign in once approved.</p>
+    <div class="row"><input id="ru" placeholder="username"><input id="rp" type="password" placeholder="password (8+ characters)"></div>
+    <div class="row">Roles:
+      <label><input type="checkbox" name="role" value="sender"> sender</label>
+      <label><input type="checkbox" name="role" value="recipient"> recipient</label>
+      <label><input type="checkbox" name="role" value="moderator"> moderator</label>
+      <button onclick="register()">Request account</button></div>
+  </section>
+</div>
+
+<div id="app" class="hidden">
+  <section data-role="sender">
+    <h2>Send an anonymous compliment</h2>
+    <p class="hint">Get your anonymous credential once, then send one message per round.</p>
+    <div class="row"><button onclick="act(['credential'])">Get credential (first time only)</button></div>
+    <div class="row"><input id="to" placeholder="recipient username"><input id="text" placeholder="message">
+      <button onclick="act(['send', val('to'), val('text')])">Send</button></div>
+  </section>
+  <section data-role="recipient">
+    <h2>Inbox</h2>
+    <p class="hint">Messages are decrypted and verified in this tab. Flag one to send it to the moderators.</p>
+    <button onclick="inbox()">Check inbox</button><div id="inbox" class="result"></div>
+  </section>
+  <section data-role="moderator">
+    <h2>Flagged messages</h2>
+    <p class="hint">Dismiss false reports, or freeze the anonymous sender of an abusive one.</p>
+    <button onclick="flags()">Load flagged messages</button><div id="flags" class="result"></div>
+  </section>
+  <section data-role="admin">
+    <h2>Accounts and rounds</h2>
+    <p class="hint">Approve new accounts. Opening a round closes the current one; senders get one message per round.</p>
+    <div class="row"><button onclick="pending()">Show pending accounts</button><button onclick="act(['open-round'])">Open new round</button></div>
+    <div id="pending" class="result"></div>
+  </section>
+  <section data-role="admin moderator">
+    <h2>Audit log</h2>
+    <p class="hint">Role-level events only, never usernames. Viewing it is logged too.</p>
+    <button onclick="list('audit', ['audit'])">Show audit log</button><div id="audit" class="result"></div>
+  </section>
+</div>
+
+<script>
+// Each tab keeps its own user: the name in sessionStorage (per tab), the password in memory only.
+let me = null, password = null;
+const $ = id => document.getElementById(id), val = id => $(id).value.trim();
+const ID = /^\[([0-9a-f]{32})\]/;
+
+async function run(user, pw, args) {
+  return fetch("/run", {method: "POST", headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({user, password: pw, args})})
+    .then(r => r.json()).catch(e => ({ok: false, output: String(e)}));
+}
+function status({ok, output}) {
+  $("status").className = ok ? "ok" : "err";
+  $("status").textContent = output || (ok ? "Done." : "Failed.");
+}
+async function act(args, refresh) {
+  const res = await run(me, password, args);
+  status(res);
+  if (res.ok && refresh) refresh();
+}
+
+// Show a command's output in `el`. Each top-level line starts an item; buttons: [label, pattern, args(match)].
+async function list(el, args, buttons = []) {
+  const res = await run(me, password, args), box = $(el);
+  box.replaceChildren();
+  if (!res.ok) return status(res);
+  for (const block of res.output.split(/\n(?! )/)) {
+    const item = document.createElement("div");
+    item.className = "item";
+    item.append(Object.assign(document.createElement("pre"), {textContent: block}));
+    for (const [label, pattern, next, refresh] of buttons) {
+      const m = block.match(pattern);
+      if (m) item.append(Object.assign(document.createElement("button"),
+                                       {textContent: label, onclick: () => act(next(m[1]), refresh)}));
+    }
+    box.append(item);
+  }
+}
+const inbox = () => list("inbox", ["inbox"], [["Flag", /^\[([0-9a-f]{32})\](?! \[flagged\])/, id => ["flag", id], inbox]]);
+const flags = () => list("flags", ["dashboard"], [["Dismiss", ID, id => ["dismiss", id], flags],
+                                                  ["Freeze sender", /^\[([0-9a-f]{32})\] round/, id => ["freeze", id], flags]]);
+const pending = () => list("pending", ["pending"], [["Approve", /^([\w.-]+): /, u => ["approve", u], pending]]);
+
+async function register() {
+  const roles = [...document.querySelectorAll("[name=role]:checked")].map(c => c.value).join(",");
+  if (!roles) return status({ok: false, output: "Pick at least one role."});
+  status(await run(val("ru"), $("rp").value, ["register", "--roles", roles]));
+}
+async function signIn() {
+  const res = await run(val("u"), $("p").value, ["login"]);
+  status(res);
+  if (!res.ok) return;
+  [me, password] = [val("u"), $("p").value];
+  sessionStorage.setItem("user", me);
+  const roles = res.output.match(/\(([^)]*)\)\.?$/)[1].split(", ");
+  document.querySelectorAll("[data-role]").forEach(s =>
+    s.classList.toggle("hidden", !s.dataset.role.split(" ").some(r => roles.includes(r))));
+  $("who").textContent = `${me} · ${roles.join(", ")}`;
+  document.title = `${me} · WhisperChain+`;
+  ["signin", "app", "signout"].forEach(id => $(id).classList.toggle("hidden"));
+  $("p").value = "";
+}
+function signOut() {
+  sessionStorage.removeItem("user");
+  location.reload();
+}
+document.querySelectorAll("#signin input:not([type=checkbox])").forEach(i =>
+  i.addEventListener("keydown", e => e.key === "Enter" && i.closest("section").querySelector("button:last-of-type").click()));
+$("u").value = sessionStorage.getItem("user") || "";  // after a refresh, this tab's user just re-enters the password
+</script>
+</body>
+</html>

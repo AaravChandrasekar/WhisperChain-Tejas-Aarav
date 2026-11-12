@@ -36,6 +36,9 @@ python client.py -u root audit
 ```
 Keys and sessions are stored in `~/.whisperchain/<user>/` (override with `WC_HOME`), readable only by you, with private keys encrypted under the account password. `WC_SERVER` points the client at another server.
 
+## Web UI
+With the server running, `python ui.py` and open http://127.0.0.1:8001. Each browser tab signs in as its own user and shows only that user's roles, so open one tab per person. Every button runs the matching `client.py` command, so keys, encryption and verification still happen on your machine, with the same keys and sessions as the client.
+
 ## Registration flow
 1. `POST /register` — user requests an account with roles (`sender`, `recipient`, `moderator`) and their RSA public key (2048+ bits, made on their device). The account stays `pending`.
 2. `GET /admin/pending` → `POST /admin/users/{u}/approve` — an admin activates it, and can override the roles.
