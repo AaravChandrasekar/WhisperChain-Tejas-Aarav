@@ -1,5 +1,5 @@
-"""WhisperChain+ command-line client. Keys are made and used only on this machine so the server
-only sees public keys, blinded values and ciphertext."""
+"""WhisperChain+ command-line client. All encryption, decryption, and key creation happens 
+locally on the user's machine so the backend never sees private keys or unencrypted text."""
 import argparse
 import getpass
 import json
@@ -25,9 +25,9 @@ class ClientError(Exception):
 def _http() -> httpx.Client:
     return httpx.Client(base_url=SERVER, timeout=30)
 
-
+# If a user is provided, attach their stored bearer token
+# Otherwise, don't send auth headers so the request stays anonymous
 def call(method: str, path: str, user: str | None = None, **kwargs):
-    """One request. With `user`, sends their saved session; without, nothing that identifies anyone."""
     headers = {"Authorization": f"Bearer {session(user)}"} if user else {}
     http = _http()
     try:
@@ -48,23 +48,21 @@ def home(user: str) -> Path:
     d.mkdir(parents=True, exist_ok=True, mode=0o700)
     return d
 
-
+# Write a file only this OS user can read
 def write_private(path: Path, data: bytes):
-    """Write a file only this OS user can read."""
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "wb") as f:
         f.write(data)
 
-
+# Grab the saved session token, and make them log in again if it's missing
 def session(user: str) -> str:
     path = home(user) / "session.json"
     if not path.exists():
         raise ClientError(f"Not logged in; run: python client.py -u {user} login")
     return json.loads(path.read_text())["token"]
 
-
+# Ask for the password and check it against the local private key. Returns (password, rsa_key)
 def unlock(user: str):
-    """Ask for the password and check it against the local private key. Returns (password, rsa_key)."""
     path = home(user) / "rsa.pem"
     if not path.exists():
         raise ClientError(f"No keys for {user} on this machine; run register first")
@@ -74,10 +72,9 @@ def unlock(user: str):
     except ValueError:
         raise ClientError("Wrong password") from None
 
-
+# Trust on first use, so remember each recipient's key fingerprint and refuse if it later
+# changes (e.g. a compromised admin swapping in a key they control)
 def check_pin(user: str, name: str, pem: str):
-    """Trust on first use: remember each recipient's key fingerprint and refuse if it later
-    changes (e.g. a compromised admin swapping in a key they control)."""
     path = home(user) / "pinned_keys.json"
     pins = json.loads(path.read_text()) if path.exists() else {}
     fp = wc.fingerprint(pem)
@@ -86,7 +83,7 @@ def check_pin(user: str, name: str, pem: str):
                           f"(was {pins[name][:16]}, now {fp[:16]}). Not sending.")
     write_private(path, json.dumps(pins, indent=2).encode())
 
-
+# Generate user keys locally and submit the public half to register an account
 def cmd_register(user: str, roles: str):
     path = home(user) / "rsa.pem"
     if path.exists():
@@ -105,16 +102,15 @@ def cmd_register(user: str, roles: str):
     print(f"Registered {user}; waiting for an admin to approve.")
     print(f"Your key fingerprint: {wc.fingerprint(wc.public_pem(key))[:16]}")
 
-
+# Authenticate and cache the session bearer token locally
 def cmd_login(user: str):
     password = getpass.getpass(f"Password for {user}: ")
     token = call("POST", "/login", json={"username": user, "password": password})["token"]
     write_private(home(user) / "session.json", json.dumps({"token": token}).encode())
     print(f"Logged in as {user} ({', '.join(call('GET', '/me', user=user)['roles'])}).")
 
-
+# Blind signature exchange: the server signs our pseudonym without knowing what it is
 def cmd_credential(user: str):
-    """Get the one anonymous sender credential: the server signs a pseudonym key it never sees."""
     d = home(user)
     if (d / "credential.json").exists():
         raise ClientError("You already have a credential")
@@ -133,7 +129,7 @@ def cmd_credential(user: str):
     write_private(d / "credential.json", json.dumps({"credential": format(credential, "x")}).encode())
     print("Got your anonymous sender credential. The server can't link it to you.")
 
-
+# Send an encrypted compliment using our anonymous token (no session token attached)
 def cmd_send(user: str, to: str, text: str):
     d = home(user)
     if not (d / "credential.json").exists():
@@ -158,7 +154,7 @@ def cmd_send(user: str, to: str, text: str):
                                     "ciphertext": wc.seal(inner, wc.load_public_key(entry["public_key"]))})
     print(f"Sent anonymously to {to} (round {round_id}).")
 
-
+# Fetch messages, decrypt them locally, and drop any with bad signatures
 def cmd_inbox(user: str):
     _, key = unlock(user)
     messages = call("GET", "/inbox", user=user)
@@ -178,9 +174,8 @@ def cmd_inbox(user: str):
         print(f"[{m['id']}]{flagged} round {inner['round']}, from a verified anonymous sender:")
         print(f"    {inner['text']}")
 
-
+# Decrypt the reported message and re-encrypt it for each active moderator's key
 def cmd_flag(user: str, message_id: str):
-    """Decrypt the message and re-seal it for every moderator, so only they can read the report."""
     _, key = unlock(user)
     msg = next((m for m in call("GET", "/inbox", user=user) if m["id"] == message_id), None)
     if not msg:
@@ -194,18 +189,17 @@ def cmd_flag(user: str, message_id: str):
     call("POST", f"/messages/{message_id}/flag", user=user, json={"reports": reports})
     print(f"Flagged {message_id} for moderators.")
 
-
+# Decrypt report payload, and ensure the report is addressed to the flagger 
+# and carries a valid credential and sender signature
 def open_report(flag: dict, key, pk: dict) -> dict:
-    """Moderators: decrypt a flag report and check it's a genuine message to whoever flagged it."""
     if not flag["report"]:
         raise wc.InvalidMessage("not sealed for you (flagged before you became a moderator)")
     inner = wc.unseal(flag["report"], key, flag["recipient"])
     wc.verify_inner(inner, flag["recipient"], int(pk["n"], 16), pk["e"])
     return inner
 
-
+# Moderator overview: inspect flagged messages, sender flag frequency, and audit alerts
 def cmd_dashboard(user: str):
-    """Moderators: the open flag queue, decrypted and verified locally, then any alerts."""
     _, key = unlock(user)
     pk = call("GET", "/tokens/public-key")
     reports = {}
@@ -228,14 +222,13 @@ def cmd_dashboard(user: str):
     for e in alerts:
         print(f"  {e['ts']}  {e['action']}")
 
-
+# Mark a flag as resolved without penalizing the sender
 def cmd_dismiss(user: str, message_id: str):
     call("POST", f"/moderation/flags/{message_id}/dismiss", user=user)
     print(f"Dismissed the flag on {message_id}.")
 
-
+# Pull the pseudonym from a verified flag report and freeze it to block future rounds
 def cmd_freeze(user: str, message_id: str):
-    """Freeze the sender of a flagged message. Only a verified report gives up its pseudonym."""
     _, key = unlock(user)
     flag = next((f for f in call("GET", "/moderation/flagged", user=user) if f["id"] == message_id), None)
     if not flag:
@@ -247,7 +240,7 @@ def cmd_freeze(user: str, message_id: str):
     call("POST", f"/moderation/flags/{message_id}/freeze", user=user, json={"pseudonym": inner["pseudonym"]})
     print(f"Froze the anonymous sender of {message_id}; their future tokens will be refused.")
 
-
+# Show accounts waiting for admin review
 def cmd_pending(user: str):
     rows = call("GET", "/admin/pending", user=user)
     for p in rows:
@@ -255,16 +248,16 @@ def cmd_pending(user: str):
     if not rows:
         print("No pending accounts.")
 
-
+# Admin approval granting the requested roles to a user
 def cmd_approve(user: str, username: str):
     call("POST", f"/admin/users/{username}/approve", user=user)
     print(f"Approved {username}.")
 
-
+# Close out the current messaging round and start the next one
 def cmd_open_round(user: str):
     print(f"Round {call('POST', '/admin/rounds/open', user=user)['round']} is open.")
 
-
+# Print the audit log and whether the server's chain check passed
 def cmd_audit(user: str):
     log = call("GET", "/audit", user=user)
     print(f"Hash chain and signatures valid: {log['chain_valid']}")

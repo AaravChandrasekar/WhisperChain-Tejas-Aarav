@@ -1,12 +1,5 @@
-"""Crypto shared by the client, the server and the tests. Nothing in here touches the server's keys.
-
-Message flow (everything but parse_envelope runs on users' devices):
-  build_inner()  - the compliment plus the sender's pseudonym, credential and signature
-  seal()         - pad it, encrypt it with a fresh AES-256-GCM key, lock that key with the
-                   recipient's RSA public key (OAEP). The result is all the server ever stores.
-  unseal()       - the recipient decrypts locally
-  verify_inner() - the recipient (later, a moderator) checks a real pseudonym signed it
-"""
+"""Crypto shared by the client, the server and the tests. Handles key generation, 
+blind signatures, envelope assembly, and verification. Most of these functions run client-side."""
 
 import base64
 import hashlib
@@ -37,18 +30,17 @@ class InvalidMessage(Exception):
 
 # ---------- User keys ----------
 
+# A user's encryption key pair that is made on their device at sign-up; only the public half is sent
 def generate_keys() -> rsa.RSAPrivateKey:
-    """A user's encryption key pair. Made on their device at sign-up; only the public half is sent."""
     return rsa.generate_private_key(public_exponent=65537, key_size=RSA_BITS)
 
-
+# Public key as a PEM string
 def public_pem(key) -> str:
     return key.public_key().public_bytes(serialization.Encoding.PEM,
                                          serialization.PublicFormat.SubjectPublicKeyInfo).decode()
 
-
+# Parse PEM and verify it's an RSA key meeting our minimum bit length
 def load_public_key(pem: str) -> rsa.RSAPublicKey:
-    """Parse a PEM public key; anything but RSA of at least MIN_RSA_BITS raises ValueError."""
     try:
         key = serialization.load_pem_public_key(pem.encode())
     except (ValueError, UnsupportedAlgorithm) as exc:
@@ -57,40 +49,35 @@ def load_public_key(pem: str) -> rsa.RSAPublicKey:
         raise ValueError(f"Public key must be RSA with at least {MIN_RSA_BITS} bits")
     return key
 
-
+# Stable ID for a public key, so clients can pin it and notice if someone swaps it
 def fingerprint(pem: str) -> str:
-    """Stable ID for a public key, so clients can pin it and notice if someone swaps it."""
     der = load_public_key(pem).public_bytes(serialization.Encoding.DER,
                                             serialization.PublicFormat.SubjectPublicKeyInfo)
     return hashlib.sha256(der).hexdigest()
 
-
+# Password-encrypted PEM, so private keys are encrypted at rest on the user's device
 def export_private_key(key, password: str) -> bytes:
-    """Password-encrypted PEM, so private keys are encrypted at rest on the user's device."""
     return key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
                              serialization.BestAvailableEncryption(password.encode()))
 
-
+# Raises ValueError on a wrong password
 def import_private_key(pem: bytes, password: str):
-    """Raises ValueError on a wrong password."""
     return serialization.load_pem_private_key(pem, password=password.encode())
 
 
-# ---------- Blind signatures (moved from app/blind.py) ----------
-# `cryptography` has no blind-signature API, so this is textbook RSA over a SHA-256 hash.
+# ---------- Blind signatures ----------
 
 def h(msg: bytes) -> int:
     return int.from_bytes(hashlib.sha256(msg).digest(), "big")
 
-
+# Hide msg behind a random factor r. Returns (blinded value to send, r to keep secret)
 def blind(msg: bytes, n: int, e: int) -> tuple[int, int]:
-    """Hide msg behind a random factor r. Returns (blinded value to send, r to keep secret)."""
     while True:
         r = secrets.randbelow(n)
         if r > 1 and math.gcd(r, n) == 1:
             return h(msg) * pow(r, e, n) % n, r
 
-
+# Strip the blinding factor r from the server's signature
 def unblind(blind_sig: int, r: int, n: int) -> int:
     return blind_sig * pow(r, -1, n) % n
 
@@ -101,12 +88,12 @@ def verify(msg: bytes, sig: int, n: int, e: int) -> bool:
 
 # ---------- Inner message (signed by the sender's pseudonym) ----------
 
+# What the sender signs: canonical JSON, so field boundaries can't be shifted
 def _signed_part(round_id: int, to: str, text: str) -> bytes:
-    """Exactly what the sender signs. Canonical JSON, so field boundaries can't be shifted."""
     return json.dumps({"v": VERSION, "round": round_id, "to": to, "text": text},
                       sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
 
-
+# Package message data, pseudonym, and signature into the inner dict
 def build_inner(text: str, to: str, round_id: int, pseudonym: Ed25519PrivateKey, credential: int) -> dict:
     if not 1 <= len(text) <= MAX_TEXT:
         raise ValueError(f"Message must be 1-{MAX_TEXT} characters")
@@ -115,10 +102,8 @@ def build_inner(text: str, to: str, round_id: int, pseudonym: Ed25519PrivateKey,
             "credential": format(credential, "x"),
             "sig": pseudonym.sign(_signed_part(round_id, to, text)).hex()}
 
-
+# Verify the message recipient, server-signed blind credential, and sender signature
 def verify_inner(inner: dict, recipient: str, n: int, e: int):
-    """Check the message is for `recipient`, its pseudonym was blind-signed by the server (n, e),
-    and that pseudonym signed it. Raises InvalidMessage. Reveals nothing about who the sender is."""
     try:
         if inner["v"] != VERSION or inner["to"] != recipient:
             raise InvalidMessage("Message is not addressed to this recipient")
@@ -138,9 +123,8 @@ def verify_inner(inner: dict, recipient: str, n: int, e: int):
 def _b64(b: bytes) -> str:
     return base64.b64encode(b).decode()
 
-
+# Encrypt for inner["to"]. Returns the JSON string sent to the server as ciphertext
 def seal(inner: dict, recipient_key: rsa.RSAPublicKey) -> str:
-    """Encrypt for inner["to"]. Returns the JSON string sent to the server as `ciphertext`."""
     body = json.dumps(inner, separators=(",", ":"), ensure_ascii=False).encode()
     if len(body) > INNER_SIZE - 2:
         raise ValueError("Message too long")
@@ -153,10 +137,8 @@ def seal(inner: dict, recipient_key: rsa.RSAPublicKey) -> str:
                        # The recipient's name is authenticated, so the envelope can't be moved to another inbox.
                        "ct": _b64(AESGCM(aes_key).encrypt(nonce, padded, inner["to"].encode()))})
 
-
+# Server-side validation of envelope structure, field types, and expected byte lengths
 def parse_envelope(envelope: str) -> dict:
-    """Shape check the server can do without reading anything: right fields, right sizes.
-    Returns the decoded fields. Raises InvalidMessage."""
     try:
         env = json.loads(envelope)
         fields = {f: base64.b64decode(env[f], validate=True) for f in ("ek", "nonce", "ct")}
@@ -167,10 +149,8 @@ def parse_envelope(envelope: str) -> dict:
         raise InvalidMessage("Malformed envelope")
     return fields
 
-
+# Decrypt AES key with recipient RSA private key, then decrypt and depad the payload
 def unseal(envelope: str, key: rsa.RSAPrivateKey, recipient: str) -> dict:
-    """Decrypt on the recipient's device. Raises InvalidMessage if it isn't for this key and
-    recipient, or was altered."""
     fields = parse_envelope(envelope)
     try:
         aes_key = key.decrypt(fields["ek"], OAEP)
