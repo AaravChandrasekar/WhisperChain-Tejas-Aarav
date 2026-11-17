@@ -1,7 +1,4 @@
-"""Flagging and moderation. A recipient flags a message by re-encrypting what they decrypted for
-every moderator, so flagged content stays unreadable at rest to everyone else (admins included).
-Moderators dismiss a flag or freeze the anonymous sender's pseudonym, and alerting rules watch for
-floods of flags and for unusually many freezes (possible moderator abuse, visible to admins)."""
+"""Flagging and moderation"""
 import hashlib
 import json
 import sqlite3
@@ -30,7 +27,8 @@ class FlagIn(BaseModel):
 class FreezeIn(BaseModel):
     pseudonym: str = Field(pattern=r"^[0-9a-f]{64}$")  # read from the decrypted, verified report
 
-
+# Gets the public keys of all moderators who are currently active
+# Recipients need these so they can re-encrypt flagged messages specifically for the moderators
 def active_moderators(db) -> dict[str, str]:
     rows = db.execute(
         """SELECT username, public_key FROM users JOIN user_roles USING (username)
@@ -38,14 +36,14 @@ def active_moderators(db) -> dict[str, str]:
     )
     return {r["username"]: r["public_key"] for r in rows}
 
-
+# Gets the directory of active moderator keys
 @router.get("/moderation/keys")
 def moderator_keys(_: dict = Depends(require("recipient"))):
     """The public keys a recipient encrypts a flag report for."""
     with tx() as db:
         return [{"username": u, "public_key": k} for u, k in active_moderators(db).items()]
 
-
+# Files a formal abuse report on a message
 @router.post("/messages/{msg_id}/flag")
 def flag(msg_id: str, body: FlagIn, user: dict = Depends(require("recipient"))):
     for envelope in body.reports.values():
@@ -71,7 +69,8 @@ def flag(msg_id: str, body: FlagIn, user: dict = Depends(require("recipient"))):
             audit(db, "alert_flag_threshold", "system")
     return {"id": msg_id, "flagged": True}
 
-
+# Gets the active moderation review queue, which only icncludes specific report copies that were encrypted
+# with the moderator's public key
 @router.get("/moderation/flagged")
 def flagged(user: dict = Depends(require("moderator"))):
     """The moderator queue: open flags only, each as the report sealed for this moderator.
@@ -83,13 +82,13 @@ def flagged(user: dict = Depends(require("moderator"))):
     return [{"id": r["message_id"], "recipient": r["recipient"],
              "report": json.loads(r["reports"]).get(user["username"])} for r in rows]
 
-
+# Helper that closes out an open flag review
 def resolve(db, msg_id: str, status: str):
     if not db.execute("UPDATE flags SET status = ? WHERE message_id = ? AND status = 'open'",
                       (status, msg_id)).rowcount:
         raise HTTPException(404, "No such open flag")
 
-
+# Closes a flagged report without punishing the author
 @router.post("/moderation/flags/{msg_id}/dismiss")
 def dismiss(msg_id: str, _: dict = Depends(require("moderator"))):
     with tx() as db:
@@ -97,7 +96,8 @@ def dismiss(msg_id: str, _: dict = Depends(require("moderator"))):
         audit(db, "flag_dismissed", "moderator")
     return {"id": msg_id, "status": "dismissed"}
 
-
+# Bans the sender behind a bad message from submitting tokens again
+# Does not reveal which person actually sent it
 @router.post("/moderation/flags/{msg_id}/freeze")
 def freeze(msg_id: str, body: FreezeIn, _: dict = Depends(require("moderator"))):
     """Refuse all future tokens from the flagged message's pseudonym. Nobody learns who it belongs to."""

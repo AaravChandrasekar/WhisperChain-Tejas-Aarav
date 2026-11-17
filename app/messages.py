@@ -17,13 +17,11 @@ router = APIRouter()
 class MessageIn(BaseModel):
     token: TokenIn
     recipient: str
-    ciphertext: str = Field(min_length=1, max_length=8192)  # whisper_crypto envelope, opaque to the server
+    ciphertext: str = Field(min_length=1, max_length=8192)  # whisper_crypto envelope
 
-
+# Returns the full list of recipient public keys so anyone can start an encrypted chat
 @router.get("/directory")
 def directory():
-    """Every active recipient's public key. No login, and always the whole list, so fetching
-    a key doesn't tell the server who a sender is about to write to."""
     with tx() as db:
         rows = db.execute(
             """SELECT username, public_key FROM users JOIN user_roles USING (username)
@@ -33,10 +31,9 @@ def directory():
     return [{"username": r["username"], "public_key": r["public_key"], "fingerprint": wc.fingerprint(r["public_key"])}
             for r in rows]
 
-
+# Sends an encrypted message into a recipient's queue without requiring sender login
 @router.post("/messages", status_code=201)
 def send_message(body: MessageIn):
-    """No login on purpose: a valid token proves the caller is a Sender without revealing which one."""
     try:
         wc.parse_envelope(body.ciphertext)  # shape only, and before the token so a bad envelope doesn't spend it
     except wc.InvalidMessage as exc:
@@ -61,11 +58,9 @@ def send_message(body: MessageIn):
         raise
     return {"id": msg_id}
 
-
+# Pulls incoming messages for the logged-in recipient while keeping them encrypted
 @router.get("/inbox")
 def inbox(user: dict = Depends(require("recipient"))):
-    """Own messages only, still encrypted: they're decrypted on the recipient's device.
-    The first fetch of each message is logged as a delivery."""
     with tx() as db:
         rows = db.execute("SELECT id, ciphertext, delivered, id IN (SELECT message_id FROM flags) AS flagged "
                           "FROM messages WHERE recipient = ?", (user["username"],)).fetchall()
@@ -75,10 +70,9 @@ def inbox(user: dict = Depends(require("recipient"))):
             audit(db, "message_delivered", "recipient")
     return [{"id": r["id"], "ciphertext": r["ciphertext"], "flagged": bool(r["flagged"])} for r in rows]
 
-
+# Read-only view of role-level events with no identities and no message content)
 @router.get("/audit")
 def audit_log(user: dict = Depends(require("moderator", "admin"))):
-    """Read-only view of role-level events (no identities, no message content). Viewing is logged too."""
     with tx() as db:
         audit(db, "audit_viewed", ",".join(sorted(user["roles"] & {"moderator", "admin"})))
         rows = db.execute("SELECT id, ts, action, role FROM audit_log ORDER BY id").fetchall()

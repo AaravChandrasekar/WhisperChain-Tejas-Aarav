@@ -1,4 +1,4 @@
-"""Bootstrap the first admin: python create_admin.py <username>"""
+"""Bootstrap the first admin"""
 import sys
 from getpass import getpass
 

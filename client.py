@@ -1,15 +1,5 @@
-"""WhisperChain+ command-line client. Keys are made and used only on this machine: the server
-only ever sees public keys, blinded values and ciphertext.
-
-    python client.py -u ria register --roles recipient
-    python client.py -u ria login
-    python client.py -u sol credential
-    python client.py -u sol send ria "you explained recursion so well!"
-    python client.py -u ria inbox
-
-Each user's files live in $WC_HOME/<user>/ (default ~/.whisperchain), readable only by you,
-with private keys encrypted under the account password.
-"""
+"""WhisperChain+ command-line client. Keys are made and used only on this machine so the server
+only sees public keys, blinded values and ciphertext."""
 import argparse
 import getpass
 import json
@@ -31,7 +21,6 @@ class ClientError(Exception):
     """Something the user should see as a one-line error."""
 
 
-# ---------- Server and local files ----------
 
 def _http() -> httpx.Client:
     return httpx.Client(base_url=SERVER, timeout=30)
@@ -97,8 +86,6 @@ def check_pin(user: str, name: str, pem: str):
                           f"(was {pins[name][:16]}, now {fp[:16]}). Not sending.")
     write_private(path, json.dumps(pins, indent=2).encode())
 
-
-# ---------- Commands ----------
 
 def cmd_register(user: str, roles: str):
     path = home(user) / "rsa.pem"
@@ -284,8 +271,6 @@ def cmd_audit(user: str):
     for e in log["entries"]:
         print(f"{e['id']:>4}  {e['ts']}  {e['action']:<22} {e['role']}")
 
-
-# ---------- Command line ----------
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description="WhisperChain+ client")

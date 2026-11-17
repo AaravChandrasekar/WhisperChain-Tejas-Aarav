@@ -68,7 +68,7 @@ python client.py -u moe dashboard              # open flags, decrypted and verif
 python client.py -u moe dismiss <message_id>   # false report
 python client.py -u moe freeze <message_id>    # block that anonymous sender
 ```
-The dashboard verifies each report's credential and signature, so fake reports show as unverifiable, and counts open flags per pseudonym to show repeat abusers. `freeze` only works on a verified report: it sends that report's pseudonym to `POST /moderation/flags/{id}/freeze`, and `redeem_token()` then refuses every future token from it in any round. Neither the moderator nor the server learns who the sender is. `POST /moderation/flags/{id}/dismiss` closes a flag without freezing.
+The dashboard verifies each report's credential and signature, so fake reports show as unverifiable, and counts open flags per pseudonym to show repeat abusers. The client only freezes a verified report: it sends that report's pseudonym to `POST /moderation/flags/{id}/freeze`, and `redeem_token()` then refuses every future token from it in any round. The server itself only checks that the caller is a moderator and the flag is open. It does not check that the pseudonym matches the flag (a known gap, see the threat model). Neither the moderator nor the server learns who the sender is. `POST /moderation/flags/{id}/dismiss` closes a flag without freezing.
 
 **Alerting rules** (`app/moderation.py`), raised as audit events that moderators and admins see:
 - `alert_flag_threshold`: `FLAG_ALERT` (5) flags are open, waiting for review.

@@ -1,9 +1,4 @@
-"""Append-only, hash-chained and signed audit log. Logs role-level metadata only, never usernames.
-
-Each entry's hash covers the previous entry's hash, and the system's Ed25519 audit key signs it, so
-even someone who can write to the database can't rewrite history without the key file. The newest
-entry's id and hash are also kept outside the database (`audit_head.json`, or `WC_AUDIT_HEAD`, protected
-like the key), so deleting the newest entries, which leaves a valid shorter chain, is caught too."""
+"""Cryptographic audit logging and chain-of-custody verification"""
 import hashlib
 import json
 import os
@@ -43,16 +38,14 @@ def _write_head(entry_id: int, h: str):
     os.chmod(tmp, 0o600)
     os.replace(tmp, _head_path())  # atomic, so a crash never leaves a half-written head
 
-
+# Runs after commit, only moves forward, and doesn't recreates a missing head for an existing log
 def _advance_head(entry_id: int, h: str):
-    """Runs after commit. Only moves forward, and never recreates a missing head for an existing log:
-    deleting the head file must not be a way to make a truncated log look valid again."""
     with _head_lock:
         head = _read_head()
         if (head is None and entry_id == 1) or (head is not None and entry_id > head["id"]):
             _write_head(entry_id, h)
 
-
+# Inserts a signed audit row bound to the previous entry
 def audit(db, action: str, role: str):
     last = db.execute("SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1").fetchone()
     prev = last["hash"] if last else "0" * 64
@@ -64,10 +57,9 @@ def audit(db, action: str, role: str):
     ).lastrowid
     db.after_commit.append(lambda: _advance_head(entry_id, h))
 
-
+# Returns true if every entry links to the one before it, carries a valid signature, and the log
+# still reaches the newest entry recorded in the head file (so that nothing was cut off the end)
 def verify_chain(db) -> bool:
-    """True if every entry links to the one before it, carries a valid signature, and the log still
-    reaches the newest entry recorded in the head file (so nothing was cut off the end)."""
     prev, pub = "0" * 64, _key.public_key()
     hashes = {}
     for r in db.execute("SELECT * FROM audit_log ORDER BY id"):
@@ -85,8 +77,7 @@ def verify_chain(db) -> bool:
 
 
 if __name__ == "__main__":
-    # `python -m app.audit`: one-time anchor for a log written before head files existed.
-    # It accepts the log as it is now, so only run it on a log you trust.
+    # `python -m app.audit`: one-time anchor for a log written before head files existed
     from .db import tx
     with tx() as db:
         last = db.execute("SELECT id, hash FROM audit_log ORDER BY id DESC LIMIT 1").fetchone()

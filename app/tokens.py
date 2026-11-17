@@ -1,10 +1,4 @@
-"""Rounds and anonymous sender tokens.
-
-1. A Sender gets ONE blind-signed credential on a pseudonym key (the server never sees the key).
-2. Each round, the Sender signs "round:<id>" with that pseudonym key. That signature plus the
-   credential is the round token. The server accepts each pseudonym once per round.
-Redeeming needs no login, so the server cannot link a token back to a user.
-"""
+"""Rounds and anonymous sender tokens"""
 import hashlib
 import sqlite3
 from datetime import datetime, timezone
@@ -49,11 +43,9 @@ def open_round(db) -> int:
     return row["id"]
 
 
-# ---------- Rounds (admin) ----------
-
+# Ends whatever round is currently active and starts a fresh one
 @router.post("/admin/rounds/open")
 def start_round(_: dict = Depends(require("admin"))):
-    """Close the current round (if any) and open a new one."""
     with tx() as db:
         if db.execute("UPDATE rounds SET closed_at = ? WHERE closed_at IS NULL", (now(),)).rowcount:
             audit(db, "round_closed", "admin")  # same event as an explicit close, so every round's end is logged
@@ -61,7 +53,7 @@ def start_round(_: dict = Depends(require("admin"))):
         audit(db, "round_opened", "admin")
     return {"round": rid}
 
-
+# Ends the current round
 @router.post("/admin/rounds/close")
 def end_round(_: dict = Depends(require("admin"))):
     with tx() as db:
@@ -70,23 +62,22 @@ def end_round(_: dict = Depends(require("admin"))):
         audit(db, "round_closed", "admin")
     return {"round": rid, "status": "closed"}
 
-
+# Tells clients which round is currently active so they know what payload to sign in their token
 @router.get("/rounds/current")
 def current_round():
     with tx() as db:
         return {"round": open_round(db)}
 
 
-# ---------- Credentials (sender) ----------
-
+# Exposes the server's public RSA modulus and exponent
+# Senders need these to blind their pseudonym keys locally before asking for a credential
 @router.get("/tokens/public-key")
 def public_key():
     return {"n": format(N, "x"), "e": E}
 
-
+# Issues a blind RSA signature over a sender's pseudonym
 @router.post("/tokens/credential")
 def issue_credential(body: BlindIn, user: dict = Depends(require("sender"))):
-    """Blind-sign a sender's pseudonym key. One per user, ever. We record WHO got one, never WHAT."""
     blinded = int(body.blinded, 16)
     if not 1 < blinded < N:
         raise HTTPException(400, "Invalid blinded value")
@@ -98,9 +89,8 @@ def issue_credential(body: BlindIn, user: dict = Depends(require("sender"))):
         audit(db, "credential_issued", "sender")
     return {"blind_signature": format(sign_blinded(blinded, D, N), "x")}
 
-
+# Accept a token once per pseudonym per round, unless frozen
 def redeem_token(db, t: TokenIn):
-    """Accept a token once per pseudonym per round, unless frozen. Raises HTTPException if invalid."""
     rid = open_round(db)
     pub = bytes.fromhex(t.pseudonym)
     if not verify(pub, int(t.credential, 16), N, E):

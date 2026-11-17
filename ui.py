@@ -1,8 +1,4 @@
-"""Local web UI for WhisperChain+: start the API server, then run `python ui.py` and open
-http://127.0.0.1:8001.
-
-It's a front end for client.py running on your machine: every button runs the same client command,
-so keys, encryption and verification still happen here, never on the server."""
+"""Local web UI for WhisperChain+"""
 import io
 import threading
 from contextlib import redirect_stderr, redirect_stdout

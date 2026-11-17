@@ -1,3 +1,4 @@
+"""FastAPI application entrypoint and user lifecycle routes"""
 import sqlite3
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -33,10 +34,9 @@ class LoginIn(BaseModel):
 class RolesIn(BaseModel):
     roles: set[str]
 
-
+# Accepts new registrations in pending status and records role-level audit trails
 @app.post("/register", status_code=201)
 def register(body: RegisterIn):
-    """Anyone can request an account; it stays 'pending' until an admin approves it."""
     validate_roles(body.roles)
     if "admin" in body.roles:
         raise HTTPException(403, "Admin accounts cannot be self-requested")
@@ -57,7 +57,7 @@ def register(body: RegisterIn):
         audit(db, "key_registered", ",".join(sorted(body.roles)))
     return {"username": body.username, "status": "pending"}
 
-
+# Verifies credentials and creates a 1-hour session token
 @app.post("/login")
 def login(body: LoginIn):
     with tx() as db:
@@ -72,14 +72,12 @@ def login(body: LoginIn):
         raise HTTPException(401, "Invalid credentials or account not active")
     return {"token": token}
 
-
+# Returns the authenticated user's username and assigned roles
 @app.get("/me")
 def me(user: dict = Depends(current_user)):
     return {"username": user["username"], "roles": sorted(user["roles"])}
 
-
-# ---------- Admin: manages registration and roles (cannot see messages) ----------
-
+# Lists unapproved account requests and their requested roles for admin review
 @app.get("/admin/pending")
 def pending(_: dict = Depends(require("admin"))):
     with tx() as db:
@@ -89,17 +87,16 @@ def pending(_: dict = Depends(require("admin"))):
         ).fetchall()
     return [{"username": r["username"], "requested_roles": (r["roles"] or "").split(",")} for r in rows]
 
-
+# Helper to verify user existence and return current status
 def _get_user(db, username: str):
     row = db.execute("SELECT status FROM users WHERE username = ?", (username,)).fetchone()
     if not row:
         raise HTTPException(404, "No such user")
     return row
 
-
+# Activates an account, optionally replacing its requested roles with an admin-assigned set
 @app.post("/admin/users/{username}/approve")
 def approve(username: str, body: RolesIn | None = None, _: dict = Depends(require("admin"))):
-    """Activate a pending account, optionally overriding the requested roles."""
     with tx() as db:
         if _get_user(db, username)["status"] != "pending":
             raise HTTPException(409, "User is not pending")
@@ -110,7 +107,7 @@ def approve(username: str, body: RolesIn | None = None, _: dict = Depends(requir
         audit(db, "user_approved", "admin")
     return {"username": username, "status": "active"}
 
-
+# Reassigns an existing user's roles while enforcing separation of duties
 @app.put("/admin/users/{username}/roles")
 def assign_roles(username: str, body: RolesIn, _: dict = Depends(require("admin"))):
     validate_roles(body.roles)
@@ -120,7 +117,7 @@ def assign_roles(username: str, body: RolesIn, _: dict = Depends(require("admin"
         audit(db, "roles_changed", "admin")
     return {"username": username, "roles": sorted(body.roles)}
 
-
+# Revokes account access and ends all live sessions immediately
 @app.post("/admin/users/{username}/revoke")
 def revoke(username: str, _: dict = Depends(require("admin"))):
     with tx() as db:

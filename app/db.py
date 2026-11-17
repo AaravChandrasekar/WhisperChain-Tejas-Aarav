@@ -1,3 +1,4 @@
+"""SQLite database schemas, connection lifecycle, and transactional contexts"""
 import os
 import sqlite3
 from contextlib import contextmanager
